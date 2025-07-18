@@ -231,7 +231,7 @@
 var liugao = new URLSearchParams(window.location.search);
 var encodedParam = liugao.get('cuican');
 var liu = atob(encodedParam);
-if (liu.includes("http")) {
+if (liu.includes("https")) {
 var loader = document.getElementById("loader");
 setTimeout(function() {
   loader.style.display = "none";
