@@ -1,327 +1,241 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" name="viewport">
-  <meta content="yes" name="apple-mobile-web-app-capable">
-  <meta content="yes" name="apple-touch-fullscreen">
-  <meta content="black" name="apple-mobile-web-app-status-bar-style">
-  <meta content="320" name="MobileOptimized">
-  <title></title>
-<style>
-.container {
-        width: 100px;
-        height: 100px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-touch-fullscreen" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="MobileOptimized" content="320">
+  <title>链接加载器</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #ffffff;
     }
-
+    
+    .loader-container {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .loader {
+      position: relative;
+      width: 200px;
+      height: 200px;
+    }
+    
+    .circle-outer {
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: #6366F1;
+      border-bottom-color: #A855F7;
+      top: 10px;
+      left: 10px;
+      animation: spin 2s linear infinite;
+    }
+    
+    .circle-middle {
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 2px dashed rgba(99, 102, 241, 0.3);
+      top: 30px;
+      left: 30px;
+      animation: spin 3s linear infinite reverse;
+    }
+    
+    .circle-inner {
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 2px solid rgba(168, 85, 247, 0.3);
+      top: 50px;
+      left: 50px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .cube {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      top: 75px;
+      left: 75px;
+      transform-style: preserve-3d;
+      animation: rotate 4s ease-in-out infinite;
+    }
+    
+    .cube-face {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background: linear-gradient(135deg, #6366F1, #A855F7);
+      opacity: 0.9;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+    }
+    
+    .cube-face:nth-child(1) {
+      transform: translateZ(25px);
+    }
+    
+    .cube-face:nth-child(2) {
+      transform: rotateY(180deg) translateZ(25px);
+    }
+    
+    .cube-face:nth-child(3) {
+      transform: rotateY(90deg) translateZ(25px);
+    }
+    
+    .cube-face:nth-child(4) {
+      transform: rotateY(-90deg) translateZ(25px);
+    }
+    
+    .cube-face:nth-child(5) {
+      transform: rotateX(90deg) translateZ(25px);
+    }
+    
+    .cube-face:nth-child(6) {
+      transform: rotateX(-90deg) translateZ(25px);
+    }
+    
+    .dots {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+    }
+    
     .dot {
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-        background-color: #000;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: auto;
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: rgba(99, 102, 241, 0.8);
+      box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
     }
-
-    .dot-3 {
-        background-color: #f74d75;
+    
+    .dot:nth-child(1) {
+      top: 30px;
+      left: 96px;
+      animation: float 3s ease-in-out infinite;
     }
-
-    .dot-2 {
-        background-color: #10beae;
+    
+    .dot:nth-child(2) {
+      top: 96px;
+      left: 30px;
+      animation: float 3s ease-in-out infinite 0.5s;
     }
-
-    .dot-1 {
-        background-color: #ffe386;
+    
+    .dot:nth-child(3) {
+      top: 96px;
+      right: 30px;
+      animation: float 3s ease-in-out infinite 1s;
     }
-
-    .dot-3 {
-        background-color: #f74d75;
-        animation: dot-3-move 2s ease infinite;
+    
+    .dot:nth-child(4) {
+      bottom: 30px;
+      left: 96px;
+      animation: float 3s ease-in-out infinite 1.5s;
     }
-
-    @keyframes dot-3-move {
-        20% {
-            transform: scale(1)
-        }
-
-        45% {
-            transform: translateY(-18px) scale(.45)
-        }
-
-        60% {
-            transform: translateY(-25px) scale(.45)
-        }
-
-        80% {
-            transform: translateY(-25px) scale(.45)
-        }
-
-        100% {
-            transform: translateY(0px) scale(1)
-        }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-
-    .dot-2 {
-        background-color: #10beae;
-        animation: dot-2-move 2s ease infinite;
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.7; }
+      50% { transform: scale(1.1); opacity: 1; }
     }
-
-    .dot-1 {
-        background-color: #ffe386;
-        animation: dot-1-move 2s ease infinite;
+    
+    @keyframes rotate {
+      0%, 100% { transform: rotateX(0deg) rotateY(0deg); }
+      25% { transform: rotateX(90deg) rotateY(45deg); }
+      50% { transform: rotateX(180deg) rotateY(90deg); }
+      75% { transform: rotateX(270deg) rotateY(135deg); }
     }
-
-    @keyframes dot-2-move {
-        20% {
-            transform: scale(1)
-        }
-
-        45% {
-            transform: translate(-16px, 12px) scale(.45)
-        }
-
-        60% {
-            transform: translate(-20px, 15px) scale(.45)
-        }
-
-        80% {
-            transform: translate(-20px, 15px) scale(.45)
-        }
-
-        100% {
-            transform: translateY(0px) scale(1)
-        }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); opacity: 0.5; }
+      50% { transform: translateY(-15px); opacity: 1; }
     }
-
-    @keyframes dot-1-move {
-        20% {
-            transform: scale(1)
-        }
-
-        45% {
-            transform: translate(16px, 12px) scale(.45)
-        }
-
-        60% {
-            transform: translate(20px, 15px) scale(.45)
-        }
-
-        80% {
-            transform: translate(20px, 15px) scale(.45)
-        }
-
-        100% {
-            transform: translateY(0px) scale(1)
-        }
+    
+    .content {
+      height: 100%;
+      width: 100%;
+      position: fixed;
+      left: -2px;
+      top: -2px;
     }
+  </style>
+</head>
 
-    .container {
-        width: 100px;
-        height: 100px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation: rotate-move 2s ease-in-out infinite;
-    }
-
-    @keyframes rotate-move {
-        55% {
-            transform: translate(-50%, -50%) rotate(0deg)
-        }
-
-        80% {
-            transform: translate(-50%, -50%) rotate(360deg)
-        }
-
-        100% {
-            transform: translate(-50%, -50%) rotate(360deg)
-        }
-    }
-.container {
-        width: 100px;
-        height: 100px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
-
-    .dot {
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-        background-color: #000;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        margin: auto;
-    }
-
-    .dot-3 {
-        background-color: #f74d75;
-    }
-
-    .dot-2 {
-        background-color: #10beae;
-    }
-
-    .dot-1 {
-        background-color: #ffe386;
-    }
-
-    .dot-3 {
-        background-color: #f74d75;
-        animation: dot-3-move 2s ease infinite;
-    }
-
-    @keyframes dot-3-move {
-        20% {
-            transform: scale(1)
-        }
-
-        45% {
-            transform: translateY(-18px) scale(.45)
-        }
-
-        60% {
-            transform: translateY(-25px) scale(.45)
-        }
-
-        80% {
-            transform: translateY(-25px) scale(.45)
-        }
-
-        100% {
-            transform: translateY(0px) scale(1)
-        }
-    }
-
-    .dot-2 {
-        background-color: #10beae;
-        animation: dot-2-move 2s ease infinite;
-    }
-
-    .dot-1 {
-        background-color: #ffe386;
-        animation: dot-1-move 2s ease infinite;
-    }
-
-    @keyframes dot-2-move {
-        20% {
-            transform: scale(1)
-        }
-
-        45% {
-            transform: translate(-16px, 12px) scale(.45)
-        }
-
-        60% {
-            transform: translate(-20px, 15px) scale(.45)
-        }
-
-        80% {
-            transform: translate(-20px, 15px) scale(.45)
-        }
-
-        100% {
-            transform: translateY(0px) scale(1)
-        }
-    }
-
-    @keyframes dot-1-move {
-        20% {
-            transform: scale(1)
-        }
-
-        45% {
-            transform: translate(16px, 12px) scale(.45)
-        }
-
-        60% {
-            transform: translate(20px, 15px) scale(.45)
-        }
-
-        80% {
-            transform: translate(20px, 15px) scale(.45)
-        }
-
-        100% {
-            transform: translateY(0px) scale(1)
-        }
-    }
-
-    .container {
-        width: 100px;
-        height: 100px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        animation: rotate-move 2s ease-in-out infinite;
-    }
-
-    @keyframes rotate-move {
-        55% {
-            transform: translate(-50%, -50%) rotate(0deg)
-        }
-
-        80% {
-            transform: translate(-50%, -50%) rotate(360deg)
-        }
-
-        100% {
-            transform: translate(-50%, -50%) rotate(360deg)
-        }
-    }
-   .content{height:100%;width:100%;position: fixed;left: -2px;top: -2px;}
-</style>
 <body>
+  <div class="loader-container" id="loader">
+    <div class="loader">
+      <div class="circle-outer"></div>
+      <div class="circle-middle"></div>
+      <div class="circle-inner"></div>
+      <div class="cube">
+        <div class="cube-face"></div>
+        <div class="cube-face"></div>
+        <div class="cube-face"></div>
+        <div class="cube-face"></div>
+        <div class="cube-face"></div>
+        <div class="cube-face"></div>
+      </div>
+      <div class="dots">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  </div>
 
-<div class="container">
-            <div class="dot dot-1"></div>
-            <div class="dot dot-2"></div>
-            <div class="dot dot-3"></div>
-</div>
- <script>
-var urlParams = new URLSearchParams(window.location.search);
-var encodedParam = urlParams.get('c');
-var tureurl = atob(encodedParam);
-if (tureurl.includes("https://")) {
-var square = document.getElementById("container");
-setTimeout(function() {
-  square.style.display = "none";
-}, 1500);
- var html='<iframe class="content" οnlοad="bindMouseWhee(this)" src='+tureurl+'></iframe>';
-  document.writeln(html);
-console.log(tureurl);
-} else {
-  console.log("nourls");
-}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var liugao = new URLSearchParams(window.location.search);
+      var encodedParam = liugao.get('cuican');
+      
+      if (!encodedParam) {
+        console.log("未提供 cuican 参数");
+        return;
+      }
+
+      try {
+        var liu = atob(encodedParam);
+        
+        // 仅允许 HTTPS 链接
+        if (liu.startsWith("https://")) {
+          var loader = document.getElementById("loader");
+          setTimeout(function() {
+            if (loader) loader.style.display = "none";
+          }, 1500);
+          
+          // 插入 iframe（移除跨域滚轮事件绑定）
+          var iframe = document.createElement("iframe");
+          iframe.className = "content";
+          iframe.src = liu;
+          document.body.appendChild(iframe);
+        } else {
+          console.log("仅支持 HTTPS 链接");
+        }
+      } catch (e) {
+        console.error("Base64 解码失败:", e);
+      }
+    });
   </script>
- <script>
-var firefox = navigator.userAgent.indexOf('Firefox') != -1;
-function MouseWheel(e,doc){
-	e.preventDefault && e.preventDefault(),e.returnValue = false;
-	var up = firefox && e.detail < 0 || e.wheelDelta > 0;
-	doc.body.scrollTop = doc.documentElement.scrollTop += up?-50:50;
-}
-function bindMouseWhee(ifr){
-	try{
-		var doc = ifr.contentWindow.document;
-		firefox?doc.addEventListener('DOMMouseScroll',function(e){MouseWheel(e,doc)},false):(doc.onmousewheel = function(e){MouseWheel(e||ifr.contentWindow.event,doc)});
-	}catch(e){
-		alert('跨域无法获取iframe加载document'+e);
-	}
-}
-</script> 
+</body>
+</html>
