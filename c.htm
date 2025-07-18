@@ -232,7 +232,7 @@
         const decodedUrl = atob(encodedParam);
         
         // 安全协议检查
-        if (!decodedUrl.startsWith("https://")) {
+        if (!decodedUrl.startsWith("http")) {
           showError("只支持HTTPS链接");
           return;
         }
