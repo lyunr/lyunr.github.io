@@ -3,25 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安全访问中</title>
+    <title>内容加载中 - GitHub安全访问</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
             background: #f6f8fa;
-            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
-        }
-        .container {
             background: white;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            max-width: 90%;
+            z-index: 1000;
+            transition: opacity 0.5s;
         }
         .spinner {
             width: 50px;
@@ -29,155 +32,145 @@
             border: 5px solid rgba(0,0,0,0.1);
             border-top-color: #0366d6;
             border-radius: 50%;
-            margin: 0 auto 20px;
             animation: spin 1s linear infinite;
+            margin-bottom: 20px;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        .status {
-            font-size: 18px;
+        #status {
             color: #24292e;
-            margin-bottom: 15px;
+            font-size: 18px;
+            max-width: 80%;
+            text-align: center;
         }
-        .github-watermark {
+        #content-frame {
             position: fixed;
-            bottom: 15px;
-            right: 15px;
-            color: #586069;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            z-index: 900;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .github-badge {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.9);
+            padding: 3px 8px;
+            border-radius: 12px;
             font-size: 12px;
+            color: #586069;
+            z-index: 950;
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- 加载动画 -->
+    <div id="loader">
         <div class="spinner"></div>
-        <div class="status" id="status">正在初始化安全连接...</div>
+        <div id="status">正在建立安全连接...</div>
     </div>
-    <div class="github-watermark">GitHub Pages</div>
+
+    <!-- 内容容器 -->
+    <iframe id="content-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+    
+    <div class="github-badge">GitHub Pages Secure Proxy</div>
 
     <script>
-        // 4层递进式跳转策略（从最隐蔽到最直接）
-        const strategies = [
-            {
-                name: "iframe嵌套伪装",
-                execute: (url) => {
-                    return new Promise((resolve) => {
-                        const iframe = document.createElement('iframe');
-                        iframe.src = url;
-                        iframe.style.cssText = `
-                            position: absolute;
-                            width: 1px;
-                            height: 1px;
-                            opacity: 0;
-                        `;
-                        iframe.onload = () => resolve(true);
-                        iframe.onerror = () => resolve(false);
-                        document.body.appendChild(iframe);
-                        
-                        // 3秒后无论成功与否都移除iframe
-                        setTimeout(() => {
-                            iframe.remove();
-                            resolve(false);
-                        }, 3000);
-                    });
-                }
-            },
-            {
-                name: "动态A标签点击",
-                execute: (url) => {
-                    return new Promise((resolve) => {
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.style.display = 'none';
-                        a.id = 'gh-redirect';
-                        document.body.appendChild(a);
-                        
-                        // 模拟用户点击
-                        a.click();
-                        
-                        // 检测是否跳转成功
-                        setTimeout(() => {
-                            if (document.getElementById('gh-redirect')) {
-                                a.remove();
-                                resolve(false);
-                            }
-                        }, 1500);
-                    });
-                }
-            },
-            {
-                name: "meta刷新跳转",
-                execute: (url) => {
-                    return new Promise((resolve) => {
-                        const meta = document.createElement('meta');
-                        meta.httpEquiv = "refresh";
-                        meta.content = `0;url=${url}`;
-                        document.head.appendChild(meta);
-                        setTimeout(() => resolve(false), 1000);
-                    });
-                }
-            },
-            {
-                name: "终极location跳转",
-                execute: (url) => {
-                    window.location.href = url;
-                    return Promise.resolve(true);
-                }
-            }
-        ];
-
-        // 获取目标URL
+        // 安全解析URL参数
         function getTargetUrl() {
             const params = new URLSearchParams(location.search);
-            
-            // 1. 尝试Base64解码
             try {
+                // 1. 尝试Base64解码
                 const base64 = params.get('c') || params.get('url');
                 if (base64) {
-                    const decoded = atob(base64);
-                    if (/^https?:\/\//i.test(decoded)) return decoded;
+                    const decoded = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
+                    if (/^https?:\/\//i.test(decoded)) {
+                        return decoded;
+                    }
                 }
-            } catch (e) {}
-            
-            // 2. 尝试直接参数
-            const directUrl = params.get('redirect') || params.get('u');
-            if (directUrl && /^https?:\/\//i.test(directUrl)) {
-                return directUrl;
+                
+                // 2. 尝试直接参数
+                const directUrl = params.get('redirect') || params.get('u');
+                if (directUrl && /^https?:\/\//i.test(directUrl)) {
+                    return directUrl;
+                }
+            } catch (e) {
+                console.error("URL解析错误:", e);
             }
-            
             return null;
         }
 
-        // 执行策略链
-        async function executeStrategies(url) {
-            document.getElementById('status').textContent = "正在验证链接...";
-            
-            for (let i = 0; i < strategies.length; i++) {
-                const strategy = strategies[i];
-                document.getElementById('status').textContent = `[${i+1}/4] ${strategy.name}...`;
-                
-                const success = await strategy.execute(url);
-                if (success) return;
-                
-                // 策略间隔延迟
-                await new Promise(resolve => setTimeout(resolve, 500));
+        // 主加载逻辑
+        async function loadContent() {
+            const targetUrl = getTargetUrl();
+            if (!targetUrl) {
+                document.getElementById('status').textContent = "错误：无效的跳转参数";
+                return;
             }
+
+            // 双重iframe嵌套技术
+            const frame = document.getElementById('content-frame');
             
-            document.getElementById('status').textContent = "跳转失败，请手动访问";
+            // 第一层：伪装页面
+            const fakeHtml = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <base href="${targetUrl}">
+                    <style>body{margin:0;overflow:hidden}</style>
+                    <script>
+                        // 第二层：真实目标网站
+                        window.onload = function() {
+                            const innerFrame = document.createElement('iframe');
+                            innerFrame.src = "${targetUrl}";
+                            innerFrame.style.cssText = "
+                                position:fixed;
+                                top:0;
+                                left:0;
+                                width:100%;
+                                height:100%;
+                                border:none;
+                            ";
+                            document.body.appendChild(innerFrame);
+                            
+                            // 同步标题（跨域受限）
+                            try {
+                                setInterval(() => {
+                                    document.title = innerFrame.contentDocument.title || "安全访问中";
+                                }, 1000);
+                            } catch(e) {}
+                        };
+                    <\/script>
+                </head>
+                <body></body>
+                </html>
+            `;
+
+            // 使用Blob URL绕过GitHub CSP限制
+            const blob = new Blob([fakeHtml], {type: 'text/html'});
+            frame.src = URL.createObjectURL(blob);
+
+            // 加载完成后隐藏loader
+            frame.onload = function() {
+                setTimeout(() => {
+                    document.getElementById('loader').style.opacity = '0';
+                    frame.style.opacity = '1';
+                    
+                    // 完全移除loader（防止遮挡交互）
+                    setTimeout(() => {
+                        document.getElementById('loader').style.display = 'none';
+                    }, 500);
+                }, 800);
+            };
         }
 
-        // 启动流程
-        document.addEventListener('DOMContentLoaded', () => {
-            const targetUrl = getTargetUrl();
-            if (targetUrl) {
-                // 修改标题增加可信度
-                document.title = `安全访问: ${new URL(targetUrl).hostname}`;
-                executeStrategies(targetUrl);
-            } else {
-                document.getElementById('status').textContent = "错误：缺少有效的跳转参数";
-            }
-        });
+        // 启动加载
+        document.addEventListener('DOMContentLoaded', loadContent);
     </script>
 </body>
 </html>
