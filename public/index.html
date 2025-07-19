@@ -1,23 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=ff.htm">
+    <title>Redirecting...</title>
     <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js')
-                .then(() => {
-                    const params = new URLSearchParams(location.search);
-                    const target = params.get('c') && atob(params.get('c'));
-                    if (target) {
-                        // 使用hash跳转避免URL暴露
-                        location.href = `/proxy.html#${encodeURIComponent(target)}`;
-                    }
-                });
-        } else {
-            document.body.innerHTML = '<h2>请使用现代浏览器访问</h2>';
-        }
+        // 双保险跳转
+        window.location.href = "ff.htm" + window.location.search;
     </script>
 </head>
 <body>
-    <h2>正在初始化安全连接...</h2>
+    <p>If you are not redirected, <a href="ff.htm">click here</a>.</p>
 </body>
 </html>
