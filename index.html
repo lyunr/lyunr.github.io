@@ -2,49 +2,121 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>安全验证页面</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <script src="assets/script.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正在跳转...</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            padding: 50px; 
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f6f8fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
         }
         .loader {
             border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
+            border-top: 5px solid #0366d6;
             border-radius: 50%;
             width: 50px;
             height: 50px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
         }
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        .btn {
+            padding: 10px 20px;
+            background-color: #0366d6;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="loader"></div>
-    <p>正在进行安全验证...</p>
-    
+    <p id="message">正在准备跳转，请稍候...</p>
+    <button id="manualRedirect" class="btn" style="display: none;">手动跳转</button>
+
     <script>
-        // 从URL参数获取加密数据
-        const urlParams = new URLSearchParams(window.location.search);
-        const encryptedData = urlParams.get('data');
+        // 从URL参数获取加密的目标URL
+        const params = new URLSearchParams(window.location.search);
+        const encodedUrl = params.get('c');
+        const timestamp = params.get('_t');
         
-        if(encryptedData) {
-            // 临时存储加密数据
-            sessionStorage.setItem('encryptedTarget', encryptedData);
+        // 简单的验证逻辑
+        if (!encodedUrl || !timestamp) {
+            document.getElementById('message').textContent = '参数错误，无法跳转';
+            document.querySelector('.loader').style.display = 'none';
+            throw new Error('缺少必要参数');
+        }
+
+        // 解码URL
+        let targetUrl;
+        try {
+            targetUrl = atob(encodedUrl);
             
-            // 跳转到中间页面（清除URL中的参数）
+            // 验证URL格式
+            if (!/^https?:\/\//i.test(targetUrl)) {
+                throw new Error('URL格式无效');
+            }
+        } catch (e) {
+            document.getElementById('message').textContent = '链接解析失败';
+            document.querySelector('.loader').style.display = 'none';
+            throw e;
+        }
+
+        // 随机延迟 (1-3秒)
+        const delay = 1000 + Math.random() * 2000;
+        
+        // 设置自动跳转定时器
+        const timer = setTimeout(() => {
+            redirectToTarget();
+        }, delay);
+
+        // 显示手动跳转按钮
+        setTimeout(() => {
+            document.getElementById('manualRedirect').style.display = 'block';
+        }, 1000);
+
+        // 手动跳转按钮事件
+        document.getElementById('manualRedirect').addEventListener('click', () => {
+            clearTimeout(timer);
+            redirectToTarget();
+        });
+
+        // 跳转函数
+        function redirectToTarget() {
+            // 添加一些随机鼠标移动事件，模拟用户行为
+            simulateUserActivity();
+            
+            // 使用location.replace避免留下历史记录
+            window.location.replace(targetUrl);
+        }
+
+        // 模拟用户活动
+        function simulateUserActivity() {
+            // 随机鼠标移动
+            const moves = 5 + Math.floor(Math.random() * 10);
+            for (let i = 0; i < moves; i++) {
+                setTimeout(() => {
+                    window.dispatchEvent(new MouseEvent('mousemove', {
+                        clientX: Math.random() * window.innerWidth,
+                        clientY: Math.random() * window.innerHeight
+                    }));
+                }, i * 50);
+            }
+            
+            // 随机点击
             setTimeout(() => {
-                window.location.href = 'redirect.html';
-            }, 500);
-        } else {
-            document.body.innerHTML = '<h1>无效的安全链接</h1>';
+                window.dispatchEvent(new MouseEvent('click'));
+            }, moves * 50);
         }
     </script>
 </body>
