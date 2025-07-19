@@ -1,47 +1,27 @@
-name: Deploy Anti-Redirect System
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]  # 监听main分支的推送
-  workflow_dispatch:      # 允许手动触发
+    branches: [ "main" ]  # 监听 main 分支的推送
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 5    # 防止卡死
-
+    
     steps:
       # 1. 拉取代码
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # 获取完整提交历史
 
-      # 2. 设置部署目录
-      - name: Prepare Files
+      # 2. （可选）构建步骤示例
+      - name: Setup files
         run: |
-          mkdir -p public
-          cp -R src/* public/  # 复制src所有内容到public
-          echo "Deployed at $(date)" > public/deploy.txt  # 生成部署标记
+          echo "构建时间: $(date)" > version.txt
+          chmod -R 755 *.html *.js  # 修复权限
 
-      # 3. 自动修复文件权限（防止403错误）
-      - name: Fix Permissions
-        run: |
-          find public -type f -exec chmod 644 {} \;
-          find public -type d -exec chmod 755 {} \;
-
-      # 4. 部署到GitHub Pages
+      # 3. 部署到 GitHub Pages
       - uses: peaceiris/actions-gh-pages@v3
-        id: deployment  # 用于后续步骤引用
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-          keep_files: false  # 每次清理旧文件
-          force_orphan: true  # 强制纯净部署
-          enable_jekyll: false # 禁用Jekyll处理
-
-      # 5. 验证部署结果
-      - name: Verify Deployment
-        run: |
-          DEPLOY_URL="https://${{ github.repository_owner }}.github.io/${{ github.repository }}/"
-          echo "Deployed to: $DEPLOY_URL"
-          curl -sI "$DEPLOY_URL" | grep -q "200 OK" || (echo "Deployment failed!"; exit 1)
+          publish_dir: ./            # 部署根目录下的所有文件
+          keep_files: false          # 清理旧文件
+          enable_jekyll: false       # 禁用 Jekyll 处理
