@@ -1,30 +1,27 @@
-const CACHE_NAME = 'proxy-cache-v2';
+const CACHE_NAME = 'anti-block-v1';
 
-self.addEventListener('install', event => {
-  event.waitUntil(
+self.addEventListener('install', (e) => {
+  e.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(['/proxy.html']))
   );
 });
 
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
+self.addEventListener('fetch', (e) => {
+  const url = new URL(e.request.url);
   
-  // 处理代理请求
+  // 代理请求处理
   if (url.pathname.startsWith('/proxy/')) {
-    event.respondWith(
+    e.respondWith(
       fetch(decodeURIComponent(url.pathname.slice(7)))
         .then(res => res.text())
-        .then(html => new Response(html, {
-          headers: { 
-            'Content-Type': 'text/html',
-            'Cache-Control': 'no-store'
-          }
-        }))
-    );
-  } else {
-    event.respondWith(
-      caches.match(event.request) || fetch(event.request)
+        .then(html => {
+          // 替换资源路径防止泄露真实域名
+          return new Response(
+            html.replace(/src="\//g, 'src="https://lyunr.github.io/'),
+            { headers: { 'Content-Type': 'text/html' } }
+          );
+        })
     );
   }
 });
