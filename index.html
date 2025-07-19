@@ -1,179 +1,30 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>内容加载中...</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            background: #f5f5f5;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #0366d6;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .message {
-            margin: 20px 0;
-            color: #333;
-        }
-        #contentFrame {
-            width: 100%;
-            height: 100vh;
-            border: none;
-            display: none;
-        }
-        #redirectForm {
-            display: none;
-        }
-        .error-message {
-            color: #d9534f;
-            text-align: center;
-            padding: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div class="container" id="loadingContainer">
-        <div class="loader"></div>
-        <div class="message">正在加载内容，请稍候...</div>
-    </div>
-
-    <div id="errorContainer" class="error-message" style="display: none;"></div>
-
-    <!-- 更安全的iframe设置 -->
-    <iframe id="contentFrame" 
-            sandbox="allow-forms allow-scripts allow-popups allow-modals"
-            referrerpolicy="no-referrer">
-    </iframe>
-
-    <!-- 表单POST跳转方式 -->
-    <form id="redirectForm" method="post" target="_blank">
-        <input type="hidden" name="data" id="postData">
-    </form>
-
+    <title>跳转中...</title>
     <script>
-        // 从URL参数获取加密的目标URL
+        // 解码URL并强制HTTPS
         const params = new URLSearchParams(window.location.search);
         const encodedUrl = params.get('c');
-        const timestamp = params.get('_t');
+        let targetUrl = atob(encodedUrl || '');
         
-        if (!encodedUrl || !timestamp) {
-            showError('参数错误，无法加载内容');
-            throw new Error('缺少必要参数');
+        if (targetUrl.startsWith('http://')) {
+            targetUrl = 'https://' + targetUrl.substring(7);
         }
-
-        // 解码URL
-        let targetUrl;
-        try {
-            targetUrl = atob(encodedUrl);
-            
-            // 强制转换为HTTPS
-            if (targetUrl.startsWith('http://')) {
-                targetUrl = 'https://' + targetUrl.substring(7);
-            }
-            
-            if (!/^https?:\/\//i.test(targetUrl)) {
-                throw new Error('URL格式无效');
-            }
-        } catch (e) {
-            showError('内容解析失败: ' + e.message);
-            throw e;
-        }
-
-        // 显示加载状态
-        function showError(message) {
-            document.getElementById('loadingContainer').style.display = 'none';
-            const errorContainer = document.getElementById('errorContainer');
-            errorContainer.style.display = 'block';
-            errorContainer.textContent = message;
-        }
-
-        // 随机选择跳转方式 (iframe或表单POST)
-        const useIframe = Math.random() > 0.5;
         
-        // 随机延迟 (1-3秒)
-        const delay = 1000 + Math.random() * 2000;
-
-        setTimeout(() => {
-            if (useIframe) {
-                // iframe加载
-                document.getElementById('loadingContainer').style.display = 'none';
-                const frame = document.getElementById('contentFrame');
-                frame.style.display = 'block';
-                
-                try {
-                    // 使用about:blank中转
-                    frame.contentWindow.location.replace('about:blank');
-                    setTimeout(() => {
-                        frame.contentWindow.location.replace(targetUrl);
-                    }, 100);
-                    
-                    // 监听iframe错误
-                    frame.onload = function() {
-                        if (frame.contentWindow.location.href === 'about:blank') {
-                            showError('加载失败，请尝试手动访问');
-                        }
-                    };
-                } catch (e) {
-                    // 如果iframe加载失败，尝试POST方式
-                    fallbackToPostRedirect();
-                }
-            } else {
-                // 表单POST跳转
-                fallbackToPostRedirect();
-            }
-        }, delay);
-
-        function fallbackToPostRedirect() {
-            try {
-                document.getElementById('postData').value = targetUrl;
-                document.getElementById('redirectForm').action = targetUrl;
-                document.getElementById('redirectForm').submit();
-            } catch (e) {
-                showError('跳转失败: ' + e.message);
-            }
-        }
-
-        // 添加用户行为模拟
-        simulateUserActivity();
-
-        function simulateUserActivity() {
-            // 随机鼠标移动
-            const moves = 5 + Math.floor(Math.random() * 10);
-            for (let i = 0; i < moves; i++) {
-                setTimeout(() => {
-                    window.dispatchEvent(new MouseEvent('mousemove', {
-                        clientX: Math.random() * window.innerWidth,
-                        clientY: Math.random() * window.innerHeight
-                    }));
-                }, i * 50);
-            }
-            
-            // 随机点击
-            setTimeout(() => {
-                window.dispatchEvent(new MouseEvent('click'));
-            }, moves * 50);
-        }
+        // 添加随机延迟
+        const delay = 2 + Math.floor(Math.random() * 3); // 2-5秒
+        
+        // 使用meta refresh跳转
+        document.write(`
+            <meta http-equiv="refresh" content="${delay};url=${targetUrl}">
+            <style>body { text-align: center; padding-top: 50px; }</style>
+            <h2>正在跳转...</h2>
+            <p>如果页面没有自动跳转，请<a href="${targetUrl}">点击这里</a></p>
+        `);
     </script>
+</head>
+<body>
 </body>
 </html>
