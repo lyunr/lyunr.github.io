@@ -1,36 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        body { margin: 0; overflow: hidden }
-        iframe { 
-            width: 100%; 
-            height: 100vh;
-            border: none;
-        }
-        .loader {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: Arial, sans-serif;
-        }
-    </style>
-</head>
-<body>
-    <div class="loader" id="loader">安全加载中...</div>
-    <iframe id="content" sandbox="allow-scripts allow-same-origin"></iframe>
-
     <script>
-        document.getElementById('content').onload = () => {
-            document.getElementById('loader').style.display = 'none';
-        };
-
         // 从hash获取目标URL
         const target = decodeURIComponent(location.hash.slice(1));
         if (target) {
-            document.getElementById('content').src = `/proxy/${encodeURIComponent(target)}`;
+            // 通过Service Worker代理加载
+            fetch(`/proxy/${encodeURIComponent(target)}`)
+                .then(res => res.text())
+                .then(html => {
+                    document.write(html);
+                    document.close();
+                });
         }
     </script>
+</head>
+<body>
+    <div>Loading...</div>
 </body>
 </html>
