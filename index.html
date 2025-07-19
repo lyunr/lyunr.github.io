@@ -1,173 +1,26 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安全跳转中...</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            flex-direction: column;
-            text-align: center;
-        }
-        .loader {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #0366d6;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .btn {
-            padding: 10px 20px;
-            background-color: #0366d6;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 10px;
-            text-decoration: none;
-        }
-        .btn:hover {
-            background-color: #0256b6;
-        }
-        .hidden {
-            display: none;
-        }
-        .error {
-            color: #d9534f;
-            margin: 20px 0;
-        }
-    </style>
+    <title>加载中...</title>
+    <script>
+    // 分段存储URL
+    const parts = [
+        "ht","tp","://","exa","mple",".com","/path"
+    ];
+    
+    // 延迟组装URL
+    setTimeout(() => {
+        const url = parts[0]+parts[1]+parts[2]+parts[3]+parts[4]+parts[5]+parts[6];
+        
+        // 使用双重跳转隐藏
+        window.location.href = "about:blank";
+        setTimeout(() => {
+            window.location.replace(url);
+        }, 50);
+    }, 2000);
+    </script>
 </head>
 <body>
-    <div id="loadingSection">
-        <div class="loader"></div>
-        <p>正在准备安全跳转，请稍候...</p>
-    </div>
-
-    <div id="interactionSection" class="hidden">
-        <p>为确保跳转安全，请点击下方按钮继续</p>
-        <button id="redirectBtn" class="btn">安全跳转</button>
-    </div>
-
-    <div id="errorSection" class="hidden error">
-        <p>自动跳转失败，请尝试手动访问</p>
-        <a id="manualLink" href="#" class="btn">手动访问</a>
-    </div>
-
-    <script>
-        // 获取加密的目标URL
-        const params = new URLSearchParams(window.location.search);
-        const encodedUrl = params.get('c');
-        
-        if (!encodedUrl) {
-            showError("缺少必要参数");
-            throw new Error("缺少跳转参数");
-        }
-
-        // 解码URL
-        let targetUrl;
-        try {
-            targetUrl = atob(encodedUrl);
-            
-            // 基本URL验证
-            if (!/^https?:\/\//i.test(targetUrl)) {
-                throw new Error("URL格式无效");
-            }
-            
-            // 设置手动跳转链接
-            document.getElementById('manualLink').href = targetUrl;
-        } catch (e) {
-            showError("链接解析错误: " + e.message);
-            throw e;
-        }
-
-        // 显示交互按钮（模拟用户行为）
-        setTimeout(() => {
-            document.getElementById('loadingSection').classList.add('hidden');
-            document.getElementById('interactionSection').classList.remove('hidden');
-        }, 1500 + Math.random() * 2000);
-
-        // 点击按钮执行跳转
-        document.getElementById('redirectBtn').addEventListener('click', () => {
-            executeRedirect(targetUrl);
-        });
-
-        // 自动跳转备用方案
-        setTimeout(() => {
-            if (!redirectExecuted) {
-                executeRedirect(targetUrl);
-            }
-        }, 5000);
-
-        let redirectExecuted = false;
-        
-        function executeRedirect(url) {
-            if (redirectExecuted) return;
-            redirectExecuted = true;
-            
-            try {
-                // 方法1: 使用window.location.replace
-                window.location.replace(url);
-                
-                // 如果上述方法被阻止，备用方案
-                setTimeout(() => {
-                    // 方法2: 创建临时链接点击
-                    const tempLink = document.createElement('a');
-                    tempLink.href = url;
-                    tempLink.target = '_blank';
-                    tempLink.style.display = 'none';
-                    document.body.appendChild(tempLink);
-                    tempLink.click();
-                    document.body.removeChild(tempLink);
-                    
-                    // 方法3: 最终回退
-                    setTimeout(() => {
-                        showError();
-                    }, 1000);
-                }, 100);
-            } catch (e) {
-                showError();
-            }
-        }
-
-        function showError(message) {
-            document.getElementById('loadingSection').classList.add('hidden');
-            document.getElementById('interactionSection').classList.add('hidden');
-            
-            const errorSection = document.getElementById('errorSection');
-            if (message) {
-                errorSection.querySelector('p').textContent = message;
-            }
-            errorSection.classList.remove('hidden');
-        }
-
-        // 模拟用户活动
-        function simulateUserActivity() {
-            const events = ['mousemove', 'scroll', 'click', 'keydown'];
-            events.forEach(event => {
-                window.addEventListener(event, () => {
-                    // 用户活动后可以尝试更积极的跳转
-                    if (!redirectExecuted) {
-                        executeRedirect(targetUrl);
-                    }
-                });
-            });
-        }
-        
-        simulateUserActivity();
-    </script>
+    <div>正在加载内容，请稍候...</div>
 </body>
 </html>
