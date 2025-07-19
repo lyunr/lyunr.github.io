@@ -1,36 +1,15 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>安全跳转中</title>
-    <script>
-        // 获取URL参数中的目标地址
-        function getParameterByName(name) {
-            name = name.replace(/[\[\]]/g, '\\$&');
-            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
-            const results = regex.exec(window.location.href);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, ' '));
-        }
-        
-        // 页面加载后跳转
-        window.onload = function() {
-            const targetUrl = getParameterByName('url');
-            if (targetUrl) {
-                // 延迟1秒跳转更自然
-                setTimeout(function() {
-                    window.location.href = targetUrl;
-                }, 1000);
-            } else {
-                document.body.innerHTML = '<h1>缺少目标URL参数</h1>';
-            }
-        }
-    </script>
+    <meta charset="UTF-8">
+    <title>安全验证页面</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="assets/script.js"></script>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            padding: 50px; 
         }
         .loader {
             border: 5px solid #f3f3f3;
@@ -49,6 +28,24 @@
 </head>
 <body>
     <div class="loader"></div>
-    <p>安全验证中，即将跳转...</p>
+    <p>正在进行安全验证...</p>
+    
+    <script>
+        // 从URL参数获取加密数据
+        const urlParams = new URLSearchParams(window.location.search);
+        const encryptedData = urlParams.get('data');
+        
+        if(encryptedData) {
+            // 临时存储加密数据
+            sessionStorage.setItem('encryptedTarget', encryptedData);
+            
+            // 跳转到中间页面（清除URL中的参数）
+            setTimeout(() => {
+                window.location.href = 'redirect.html';
+            }, 500);
+        } else {
+            document.body.innerHTML = '<h1>无效的安全链接</h1>';
+        }
+    </script>
 </body>
 </html>
