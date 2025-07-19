@@ -1,1 +1,54 @@
-正常访问
+<!DOCTYPE html>
+<html>
+<head>
+    <title>安全跳转中</title>
+    <script>
+        // 获取URL参数中的目标地址
+        function getParameterByName(name) {
+            name = name.replace(/[\[\]]/g, '\\$&');
+            const regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)');
+            const results = regex.exec(window.location.href);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, ' '));
+        }
+        
+        // 页面加载后跳转
+        window.onload = function() {
+            const targetUrl = getParameterByName('url');
+            if (targetUrl) {
+                // 延迟1秒跳转更自然
+                setTimeout(function() {
+                    window.location.href = targetUrl;
+                }, 1000);
+            } else {
+                document.body.innerHTML = '<h1>缺少目标URL参数</h1>';
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+    <p>安全验证中，即将跳转...</p>
+</body>
+</html>
