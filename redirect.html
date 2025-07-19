@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>跳转中...</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="assets/script.js"></script>
+</head>
+<body>
+    <div class="loader"></div>
+    <p>即将跳转到目标网站...</p>
+    
+    <script>
+        // 从sessionStorage获取加密数据
+        const encryptedData = sessionStorage.getItem('encryptedTarget');
+        
+        if(encryptedData) {
+            try {
+                // 解密数据
+                const targetUrl = decryptUrl(encryptedData);
+                
+                // 清除存储
+                sessionStorage.removeItem('encryptedTarget');
+                
+                // 延迟跳转
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 1500);
+            } catch(e) {
+                document.body.innerHTML = '<h1>链接已失效</h1>';
+            }
+        } else {
+            document.body.innerHTML = '<h1>请从有效入口访问</h1>';
+        }
+    </script>
+</body>
+</html>
