@@ -3,135 +3,282 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>安全链接保护中</title>
-    <script>
-        // 获取URL参数中的加密链接
-        function getUrlParam(name) {
-            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
-            var r = window.location.search.substr(1).match(reg);
-            if (r != null) return decodeURIComponent(r[2]);
-            return null;
-        }
-        
-        // 从URL中获取原始链接
-        function getOriginalUrl() {
-            // 方式1：从c参数获取base64编码的URL
-            var encodedUrl = getUrlParam('c');
-            if (encodedUrl) {
-                try {
-                    return atob(encodedUrl);
-                } catch (e) {
-                    console.error("Base64解码失败:", e);
-                    return null;
-                }
-            }
-            
-            // 方式2：从redirect参数获取直接URL编码的URL
-            var redirectUrl = getUrlParam('redirect');
-            if (redirectUrl) {
-                return redirectUrl;
-            }
-            
-            return null;
-        }
-        
-        // 主加载逻辑
-        function loadContent() {
-            var originalUrl = getOriginalUrl();
-            
-            if (originalUrl) {
-                // 验证URL格式
-                if (!/^https?:\/\//i.test(originalUrl)) {
-                    originalUrl = 'http://' + originalUrl;
-                }
-                
-                // 创建iframe加载目标网站
-                var iframe = document.createElement('iframe');
-                iframe.src = originalUrl;
-                iframe.style.position = 'fixed';
-                iframe.style.top = '0';
-                iframe.style.left = '0';
-                iframe.style.width = '100%';
-                iframe.style.height = '100%';
-                iframe.style.border = 'none';
-                iframe.style.zIndex = '9999';
-                
-                // 先隐藏iframe，等加载完成再显示
-                iframe.style.opacity = '0';
-                iframe.onload = function() {
-                    iframe.style.opacity = '1';
-                    document.getElementById('loading').style.display = 'none';
-                    
-                    // 尝试同步页面标题
-                    try {
-                        document.title = iframe.contentDocument.title || '安全链接保护中';
-                    } catch (e) {
-                        // 跨域安全限制
-                    }
-                };
-                
-                document.body.appendChild(iframe);
-                
-                // 加载超时处理
-                setTimeout(function() {
-                    if (iframe.style.opacity === '0') {
-                        iframe.style.opacity = '1';
-                        document.getElementById('loading').style.display = 'none';
-                    }
-                }, 5000); // 5秒超时
-            } else {
-                document.getElementById('status').textContent = '错误：链接参数无效';
-            }
-        }
-        
-        // 页面加载后执行
-        window.onload = loadContent;
-    </script>
+    <title>安全访问中</title>
     <style>
         body {
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            height: 100vh;
             overflow: hidden;
         }
-        #loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: white;
+        #container {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10000;
+            height: 100%;
         }
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(0, 0, 0, 0.1);
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(0, 0, 0, 0.1);
             border-radius: 50%;
-            border-top-color: #06c;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        #status {
-            font-size: 16px;
-            color: #333;
-            max-width: 80%;
-            text-align: center;
+            border-top-color: #3498db;
+            animation: spin 1.2s linear infinite;
+            margin-bottom: 25px;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+        #status {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            text-align: center;
+            max-width: 80%;
+        }
+        .progress-bar {
+            width: 300px;
+            height: 8px;
+            background-color: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        .progress {
+            height: 100%;
+            width: 0;
+            background-color: #3498db;
+            transition: width 0.3s ease;
+        }
+        .tech-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
-    <div id="loading">
+    <div id="container">
         <div class="spinner"></div>
-        <div id="status">正在建立安全连接...</div>
+        <div id="status">正在初始化安全连接...</div>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div class="tech-badge">安全防红技术 v3.0</div>
     </div>
+
+    <script>
+        // 三级防红策略配置
+        const strategies = [
+            { 
+                name: "iframe嵌套", 
+                execute: tryIframe,
+                timeout: 4000 
+            },
+            { 
+                name: "动态跳转", 
+                execute: tryDynamicRedirect,
+                timeout: 3000 
+            },
+            { 
+                name: "终极跳转", 
+                execute: tryFinalRedirect,
+                timeout: 2000 
+            }
+        ];
+
+        // 当前策略索引
+        let currentStrategy = 0;
+        let fallbackTimer;
+        const maxProgress = 100;
+        let currentProgress = 0;
+        const progressStep = maxProgress / (strategies.reduce((sum, s) => sum + s.timeout, 0) / 100);
+
+        // 初始化进度条动画
+        function updateProgress() {
+            currentProgress += progressStep;
+            document.getElementById('progress').style.width = Math.min(currentProgress, maxProgress) + '%';
+            
+            if (currentProgress < maxProgress) {
+                setTimeout(updateProgress, 100);
+            }
+        }
+
+        // 策略1: iframe嵌套
+        function tryIframe(url, callback) {
+            updateStatus("正在尝试安全加载...");
+            
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border: none;
+                z-index: 999;
+                opacity: 0;
+                transition: opacity 0.5s ease;
+            `;
+            
+            iframe.onload = function() {
+                iframe.style.opacity = '1';
+                document.getElementById('container').style.display = 'none';
+                clearTimeout(fallbackTimer);
+                callback(true);
+            };
+            
+            iframe.onerror = function() {
+                callback(false);
+            };
+            
+            document.body.appendChild(iframe);
+            
+            // 渐进式显示
+            setTimeout(() => {
+                if (iframe.style.opacity === '0') {
+                    iframe.style.opacity = '0.3';
+                }
+            }, 1000);
+        }
+
+        // 策略2: 动态跳转(无痕)
+        function tryDynamicRedirect(url, callback) {
+            updateStatus("正在准备无痕跳转...");
+            
+            // 创建隐藏的A标签触发跳转
+            const a = document.createElement('a');
+            a.href = url;
+            a.style.display = 'none';
+            a.setAttribute('data-js', 'dynamic-redirect');
+            document.body.appendChild(a);
+            
+            // 异步触发点击
+            setTimeout(() => {
+                a.click();
+                
+                // 监测是否跳转成功
+                setTimeout(() => {
+                    // 如果还在当前页面
+                    if (document.body.contains(a)) {
+                        document.body.removeChild(a);
+                        callback(false);
+                    }
+                }, 1500);
+            }, 500);
+        }
+
+        // 策略3: 终极跳转方案
+        function tryFinalRedirect(url) {
+            updateStatus("正在完成最终跳转...");
+            
+            // 使用meta刷新+location.href双保险
+            const meta = document.createElement('meta');
+            meta.httpEquiv = "refresh";
+            meta.content = `0;url=${url}`;
+            document.head.appendChild(meta);
+            
+            // 添加点击覆盖层
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 9999;
+                cursor: pointer;
+            `;
+            overlay.onclick = function() {
+                location.href = url;
+            };
+            document.body.appendChild(overlay);
+            
+            // 强制跳转
+            setTimeout(() => {
+                location.href = url;
+            }, 500);
+        }
+
+        function updateStatus(text) {
+            document.getElementById('status').textContent = text;
+        }
+
+        function getTargetUrl() {
+            // 解析URL参数
+            const params = new URLSearchParams(location.search);
+            const encodedUrl = params.get('c') || params.get('url') || params.get('redirect');
+            
+            if (!encodedUrl) {
+                updateStatus("错误：缺少跳转参数");
+                return null;
+            }
+
+            try {
+                // 尝试Base64解码
+                let url = atob(encodedUrl);
+                
+                // 验证URL格式
+                if (!/^https?:\/\//i.test(url)) {
+                    url = 'http://' + url;
+                }
+                
+                return url;
+            } catch (e) {
+                // 如果不是Base64，直接使用
+                if (/^https?:\//i.test(encodedUrl)) {
+                    return encodedUrl;
+                }
+                
+                updateStatus("错误：链接格式无效");
+                return null;
+            }
+        }
+
+        // 执行策略链
+        function executeNextStrategy(url) {
+            if (currentStrategy >= strategies.length) {
+                updateStatus("无法安全加载内容，请稍后重试");
+                return;
+            }
+
+            const strategy = strategies[currentStrategy];
+            updateStatus(`[${strategy.name}] ${document.getElementById('status').textContent}`);
+            
+            strategy.execute(url, (success) => {
+                if (!success) {
+                    currentStrategy++;
+                    fallbackTimer = setTimeout(() => {
+                        executeNextStrategy(url);
+                    }, 500); // 策略间延迟
+                }
+            });
+        }
+
+        // 启动防红流程
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            
+            const targetUrl = getTargetUrl();
+            if (targetUrl) {
+                // 修改页面标题为动态
+                document.title = `安全访问: ${new URL(targetUrl).hostname}`;
+                
+                // 开始执行策略链
+                setTimeout(() => {
+                    executeNextStrategy(targetUrl);
+                }, 800);
+            }
+        });
+    </script>
 </body>
 </html>
