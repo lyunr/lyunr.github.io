@@ -1,24 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>服务加载中</title>
+    <title>跳转中</title>
+    <meta name="referrer" content="never">
     <script>
-    // 注册Service Worker
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').then(registration => {
-            console.log('ServiceWorker注册成功');
-            
-            // 延迟跳转
-            setTimeout(() => {
-                window.location.href = '/proxy-path'; // 这个路径会被Service Worker拦截
-            }, 1000);
-        });
-    } else {
-        document.body.innerHTML = '您的浏览器不支持此功能';
-    }
+    // 混淆的URL存储
+    const urlParts = [
+        window.btoa('htt').slice(0,3),
+        window.btoa('ps:').slice(1,4),
+        window.btoa('//ex').slice(0,3),
+        window.btoa('amp').slice(0,3),
+        window.btoa('le.c').slice(0,3),
+        window.btoa('om/p').slice(0,3),
+        window.btoa('ath').slice(0,3)
+    ];
+    
+    setTimeout(() => {
+        const realUrl = atob(urlParts.join('')) + '?from=github';
+        document.write(`
+            <meta http-equiv="refresh" content="0;url=${realUrl}">
+            <p>正在跳转...</p>
+        `);
+    }, 2000);
     </script>
 </head>
 <body>
-    <p>初始化服务中...</p>
+    <p>准备跳转，请稍候...</p>
 </body>
 </html>
