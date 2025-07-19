@@ -1,20 +1,31 @@
-name: Deploy to GitHub Pages
+name: Deploy Anti-Block System
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]  # 监听main分支的推送
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    
     steps:
+      # 1. 拉取代码
       - uses: actions/checkout@v4
-      - run: |
+
+      # 2. 准备部署文件
+      - name: Setup Files
+        run: |
           mkdir -p public
-          cp ff.htm public/index.html
-          cp proxy.html public/
-          cp sw.js public/
+          cp src/ff.htm public/index.html  # 主跳转页
+          cp src/proxy.html public/       # 代理页
+          cp src/sw.js public/            # Service Worker
+          
+          # 添加CNAME（如果使用自定义域名）
+          echo "yourdomain.com" > public/CNAME
+
+      # 3. 部署到GitHub Pages
       - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
+          publish_dir: ./public           # 指定部署目录
+          keep_files: true                # 保留旧文件
