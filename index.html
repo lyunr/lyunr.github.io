@@ -1,127 +1,43 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="referrer" content="no-referrer">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>安全跳转中</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
-            background: #f5f5f5;
-        }
-        .spinner {
-            border: 5px solid rgba(0,0,0,0.1);
-            border-top-color: #3498db;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            margin: 20px auto;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        #fallback-btn {
-            display: none;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: #3498db;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <div class="spinner"></div>
-    <p id="status">正在建立安全连接...</p>
-    <button id="fallback-btn">点击手动跳转</button>
+<script>
+// 配置Cloudflare Worker代理地址
+const WORKER_URL = 'https://winter-disk-bcce.tiktokfeng.workers.dev';
 
-    <script>
-        // Cloudflare Worker 代理地址
-        const WORKER_URL = 'https://winter-disk-bcce.tiktokfeng.workers.dev';
+async function handleRedirect() {
+    const targetUrl = getTargetUrl(); // 解析Base64参数
+    
+    // 判断目标域名选择策略
+    if (targetUrl.includes('lyyzs.xyz')) {
+        // 严格防护网站：使用Worker代理 + 新窗口打开
+        const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(targetUrl)}`;
         
-        // 解析Base64参数
-        function getTargetUrl() {
-            const params = new URLSearchParams(location.search);
-            try {
-                const base64 = params.get('c');
-                if (base64) {
-                    const decoded = atob(base64.replace(/-/g, '+').replace(/_/g, '/'));
-                    if (/^https?:\/\//i.test(decoded)) {
-                        return decoded;
-                    }
-                }
-            } catch (e) {
-                console.error("解码失败:", e);
+        // 方法1: 尝试iframe嵌套（带防护绕过）
+        const iframe = document.createElement('iframe');
+        iframe.srcdoc = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <script>
+                    // 解除防护检测
+                    Object.defineProperty(window, 'top', { value: window });
+                    window.frameElement = null;
+                <\/script>
+                <meta http-equiv="refresh" content="0;url=${proxyUrl}">
+            </head>
+            <body></body>
+            </html>
+        `;
+        document.body.appendChild(iframe);
+        
+        // 方法2: 5秒后降级为新窗口打开
+        setTimeout(() => {
+            if (!iframe.contentWindow?.location.href) {
+                window.open(proxyUrl, '_blank', 'noopener=yes');
             }
-            return null;
-        }
-
-        // 主跳转逻辑
-        async function redirect() {
-            const targetUrl = getTargetUrl();
-            if (!targetUrl) {
-                showError("错误：无效的跳转参数");
-                return;
-            }
-
-            // 优先使用Cloudflare Worker代理
-            const proxyUrl = `${WORKER_URL}/?url=${encodeURIComponent(targetUrl)}`;
-            
-            // 方法1: iframe嵌套（适合普通网站）
-            try {
-                const iframe = document.createElement('iframe');
-                iframe.src = proxyUrl;
-                iframe.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    border: none;
-                    opacity: 0;
-                    transition: opacity 0.5s;
-                `;
-                document.body.appendChild(iframe);
-
-                // 超时检测
-                setTimeout(() => {
-                    if (!iframe.contentWindow?.location.href) {
-                        throw new Error("iframe加载超时");
-                    }
-                }, 3000);
-
-                iframe.onload = () => {
-                    iframe.style.opacity = '1';
-                    document.getElementById('status').style.display = 'none';
-                };
-            } catch (e) {
-                // 方法2: 直接Worker代理跳转（严格环境备用）
-                console.warn("iframe失败，降级到直接跳转:", e);
-                location.href = proxyUrl;
-                
-                // 方法3: 终极备用方案
-                setTimeout(() => {
-                    document.getElementById('fallback-btn').style.display = 'block';
-                    document.getElementById('fallback-btn').onclick = () => {
-                        window.open(targetUrl, '_blank');
-                    };
-                }, 5000);
-            }
-        }
-
-        function showError(msg) {
-            document.getElementById('status').textContent = msg;
-            document.querySelector('.spinner').style.display = 'none';
-        }
-
-        // 页面加载后执行
-        document.addEventListener('DOMContentLoaded', redirect);
-    </script>
-</body>
-</html>
+        }, 5000);
+        
+    } else {
+        // 普通网站：原始iframe方案
+        location.href = `/proxy.html#${encodeURIComponent(targetUrl)}`;
+    }
+}
+</script>
