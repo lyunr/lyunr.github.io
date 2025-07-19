@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(() => {
+                    const params = new URLSearchParams(location.search);
+                    const target = params.get('c') && atob(params.get('c'));
+                    if (target) {
+                        // 使用hash跳转避免URL暴露
+                        location.href = `/proxy.html#${encodeURIComponent(target)}`;
+                    }
+                });
+        } else {
+            document.body.innerHTML = '<h2>请使用现代浏览器访问</h2>';
+        }
+    </script>
+</head>
+<body>
+    <h2>正在初始化安全连接...</h2>
+</body>
+</html>
