@@ -1,27 +1,22 @@
-const CACHE_NAME = 'anti-block-v1';
+const CACHE_NAME = 'proxy-v1';
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(['/proxy.html']))
-  );
-});
-
-self.addEventListener('fetch', (e) => {
-  const url = new URL(e.request.url);
-  
-  // 代理请求处理
-  if (url.pathname.startsWith('/proxy/')) {
-    e.respondWith(
-      fetch(decodeURIComponent(url.pathname.slice(7)))
-        .then(res => res.text())
-        .then(html => {
-          // 替换资源路径防止泄露真实域名
-          return new Response(
-            html.replace(/src="\//g, 'src="https://lyunr.github.io/'),
-            { headers: { 'Content-Type': 'text/html' } }
-          );
-        })
-    );
-  }
+self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+    
+    // 处理代理请求
+    if (url.pathname.startsWith('/proxy/')) {
+        event.respondWith(
+            fetch(decodeURIComponent(url.pathname.slice(7)))
+                .then(res => res.text())
+                .then(html => {
+                    // 替换所有相对路径为绝对路径
+                    const processed = html
+                        .replace(/href="\//g, `href="${url.origin}/`)
+                        .replace(/src="\//g, `src="${url.origin}/`);
+                    return new Response(processed, {
+                        headers: { 'Content-Type': 'text/html' }
+                    });
+                })
+        );
+    }
 });
