@@ -45,6 +45,11 @@
         #redirectForm {
             display: none;
         }
+        .error-message {
+            color: #d9534f;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -53,10 +58,15 @@
         <div class="message">正在加载内容，请稍候...</div>
     </div>
 
-    <!-- 方案1: iframe 方式 -->
-    <iframe id="contentFrame" sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals"></iframe>
+    <div id="errorContainer" class="error-message" style="display: none;"></div>
 
-    <!-- 方案2: 表单POST跳转方式 -->
+    <!-- 更安全的iframe设置 -->
+    <iframe id="contentFrame" 
+            sandbox="allow-forms allow-scripts allow-popups allow-modals"
+            referrerpolicy="no-referrer">
+    </iframe>
+
+    <!-- 表单POST跳转方式 -->
     <form id="redirectForm" method="post" target="_blank">
         <input type="hidden" name="data" id="postData">
     </form>
@@ -68,8 +78,7 @@
         const timestamp = params.get('_t');
         
         if (!encodedUrl || !timestamp) {
-            document.querySelector('.message').textContent = '参数错误，无法加载内容';
-            document.querySelector('.loader').style.display = 'none';
+            showError('参数错误，无法加载内容');
             throw new Error('缺少必要参数');
         }
 
@@ -77,13 +86,26 @@
         let targetUrl;
         try {
             targetUrl = atob(encodedUrl);
+            
+            // 强制转换为HTTPS
+            if (targetUrl.startsWith('http://')) {
+                targetUrl = 'https://' + targetUrl.substring(7);
+            }
+            
             if (!/^https?:\/\//i.test(targetUrl)) {
                 throw new Error('URL格式无效');
             }
         } catch (e) {
-            document.querySelector('.message').textContent = '内容解析失败';
-            document.querySelector('.loader').style.display = 'none';
+            showError('内容解析失败: ' + e.message);
             throw e;
+        }
+
+        // 显示加载状态
+        function showError(message) {
+            document.getElementById('loadingContainer').style.display = 'none';
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.style.display = 'block';
+            errorContainer.textContent = message;
         }
 
         // 随机选择跳转方式 (iframe或表单POST)
@@ -94,23 +116,43 @@
 
         setTimeout(() => {
             if (useIframe) {
-                // 方案1: iframe加载
+                // iframe加载
                 document.getElementById('loadingContainer').style.display = 'none';
                 const frame = document.getElementById('contentFrame');
                 frame.style.display = 'block';
                 
-                // 使用about:blank中转避免referer泄露
-                frame.contentWindow.location.replace('about:blank');
-                setTimeout(() => {
-                    frame.contentWindow.location.replace(targetUrl);
-                }, 100);
+                try {
+                    // 使用about:blank中转
+                    frame.contentWindow.location.replace('about:blank');
+                    setTimeout(() => {
+                        frame.contentWindow.location.replace(targetUrl);
+                    }, 100);
+                    
+                    // 监听iframe错误
+                    frame.onload = function() {
+                        if (frame.contentWindow.location.href === 'about:blank') {
+                            showError('加载失败，请尝试手动访问');
+                        }
+                    };
+                } catch (e) {
+                    // 如果iframe加载失败，尝试POST方式
+                    fallbackToPostRedirect();
+                }
             } else {
-                // 方案2: 表单POST跳转
+                // 表单POST跳转
+                fallbackToPostRedirect();
+            }
+        }, delay);
+
+        function fallbackToPostRedirect() {
+            try {
                 document.getElementById('postData').value = targetUrl;
                 document.getElementById('redirectForm').action = targetUrl;
                 document.getElementById('redirectForm').submit();
+            } catch (e) {
+                showError('跳转失败: ' + e.message);
             }
-        }, delay);
+        }
 
         // 添加用户行为模拟
         simulateUserActivity();
@@ -131,14 +173,6 @@
             setTimeout(() => {
                 window.dispatchEvent(new MouseEvent('click'));
             }, moves * 50);
-            
-            // 随机滚动
-            setTimeout(() => {
-                window.scrollTo({
-                    top: Math.random() * 100,
-                    behavior: 'smooth'
-                });
-            }, moves * 50 + 100);
         }
     </script>
 </body>
