@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>正在跳转...</title>
+    <title>安全链接保护中</title>
     <script>
         // 获取URL参数中的加密链接
         function getUrlParam(name) {
@@ -34,8 +34,8 @@
             return null;
         }
         
-        // 主跳转逻辑
-        function redirect() {
+        // 主加载逻辑
+        function loadContent() {
             var originalUrl = getOriginalUrl();
             
             if (originalUrl) {
@@ -44,68 +44,81 @@
                     originalUrl = 'http://' + originalUrl;
                 }
                 
-                // 延迟跳转，增加防红效果
-                setTimeout(function() {
-                    window.location.href = originalUrl;
-                }, 500); // 500毫秒延迟可以增加防红效果
+                // 隐藏加载状态
+                document.getElementById('loading').style.display = 'none';
                 
-                document.getElementById('status').innerHTML = '正在跳转到目标链接，请稍候...';
-                document.getElementById('directLink').href = originalUrl;
-                document.getElementById('directLink').innerHTML = originalUrl;
+                // 创建iframe加载目标网站
+                var iframe = document.createElement('iframe');
+                iframe.src = originalUrl;
+                iframe.style.position = 'fixed';
+                iframe.style.top = '0';
+                iframe.style.left = '0';
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                iframe.style.zIndex = '9999';
+                document.body.appendChild(iframe);
+                
+                // 修改页面标题为目标网站（可选）
+                setTimeout(function() {
+                    try {
+                        document.title = iframe.contentDocument.title || '安全链接保护中';
+                    } catch (e) {
+                        // 跨域安全限制，无法获取标题
+                    }
+                }, 1000);
             } else {
-                document.getElementById('status').innerHTML = '未找到有效的跳转链接';
+                document.getElementById('status').innerHTML = '错误：未找到有效的跳转链接';
+                document.getElementById('directLink').style.display = 'none';
             }
         }
         
-        // 页面加载后执行跳转
+        // 页面加载后执行
         window.onload = function() {
-            redirect();
+            loadContent();
         };
     </script>
     <style>
         body {
+            margin: 0;
+            padding: 0;
             font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
             background-color: #f5f5f5;
-            color: #333;
+            overflow: hidden;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
         }
-        h1 {
-            color: #444;
-            font-size: 24px;
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #06c;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
         }
         #status {
-            margin: 20px 0;
             font-size: 16px;
+            color: #333;
+            margin-bottom: 20px;
         }
         #directLink {
-            display: block;
-            margin: 20px 0;
-            word-break: break-all;
             color: #06c;
             text-decoration: none;
         }
         #directLink:hover {
             text-decoration: underline;
-        }
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(0,0,0,.1);
-            border-radius: 50%;
-            border-top-color: #06c;
-            animation: spin 1s ease-in-out infinite;
-            margin-right: 10px;
-            vertical-align: middle;
         }
         @keyframes spin {
             to { transform: rotate(360deg); }
@@ -113,12 +126,10 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>链接跳转中</h1>
-        <div id="status">
-            <span class="loading"></span>正在验证链接...
-        </div>
-        <a id="directLink" href="#" target="_blank" style="display:none;">如果页面没有自动跳转，请点击这里</a>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div id="status">正在验证链接安全性...</div>
+        <a id="directLink" href="#" style="display:none;" target="_blank">如果内容未加载，请点击这里</a>
     </div>
 </body>
 </html>
