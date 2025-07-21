@@ -1,0 +1,15 @@
+.vscode
+*.env
+
+extend/*
+!extend/ImgCaptcha.php
+!extend/payclient.zip
+!extend/Plugin.php
+
+vendor/*
+!vendor/vendor.zip
+
+runtime/*
+
+app/*
+!app/controller/TestController.php
