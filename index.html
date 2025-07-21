@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 添加缓存控制确保每次都是新请求 -->
+    <!-- 强制禁用缓存 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -39,6 +39,16 @@
             color: #666;
             font-size: 16px;
         }
+        
+        /* 跳转提示样式 */
+        .redirecting {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -49,38 +59,72 @@
         <p class="guide-text">请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
     </div>
     
+    <!-- 跳转提示（仅外部浏览器可见） -->
+    <div id="redirecting" class="redirecting">
+        <p>正在跳转中...</p>
+    </div>
+    
     <script>
         // 检测是否在微信内置浏览器中
         function isWeixinBrowser() {
             return /MicroMessenger/i.test(navigator.userAgent);
         }
         
-        // 生成随机字符串函数
+        // 生成随机字符串
         function generateRandomString() {
             return Math.random().toString(36).substring(2, 15) + 
                    Math.random().toString(36).substring(2, 15);
         }
         
-        // 目标跳转链接（添加随机参数）
+        // 获取带随机参数的当前页面URL
+        function getCurrentUrlWithRandom() {
+            const randomParam = "rnd=" + generateRandomString();
+            const separator = window.location.href.includes('?') ? '&' : '?';
+            return window.location.href.split('#')[0].split('?')[0] + separator + randomParam;
+        }
+        
+        // 获取带随机参数的目标URL
         function getTargetUrl() {
             const baseUrl = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE=";  // 请替换为你的实际链接
             const randomParam = "t=" + generateRandomString();
-            
-            // 判断链接是否已有参数
             const separator = baseUrl.includes('?') ? '&' : '?';
             return baseUrl + separator + randomParam;
         }
         
-        // 页面加载时判断
-        window.onload = function() {
-            const weixinGuide = document.getElementById('weixinGuide');
+        // 执行双重跳转
+        function performDoubleRedirect() {
+            // 显示跳转提示
+            document.getElementById('redirecting').style.display = 'block';
             
+            // 第一次跳转：当前页带随机参数
+            const intermediateUrl = getCurrentUrlWithRandom();
+            
+            // 第二次跳转：目标页带随机参数
+            const finalUrl = getTargetUrl();
+            
+            // 先跳转到中间页（强制刷新）
+            window.location.href = intermediateUrl;
+            
+            // 设置定时器确保第二次跳转执行
+            setTimeout(function() {
+                window.location.href = finalUrl;
+            }, 50);
+        }
+        
+        // 页面加载逻辑
+        window.onload = function() {
             if (isWeixinBrowser()) {
                 // 在微信中显示引导页面
-                weixinGuide.style.display = 'flex';
+                document.getElementById('weixinGuide').style.display = 'flex';
             } else {
-                // 不在微信中（已在浏览器中），直接跳转（带随机参数）
-                window.location.href = getTargetUrl();
+                // 检查是否已经是带随机参数的中间页
+                if (window.location.href.includes('rnd=')) {
+                    // 直接跳转到目标页
+                    window.location.href = getTargetUrl();
+                } else {
+                    // 执行双重跳转
+                    performDoubleRedirect();
+                }
             }
         };
     </script>
