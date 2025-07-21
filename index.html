@@ -39,20 +39,18 @@
         }
         
         .guide-image.bottom {
-            border-radius: 12px; /* 下方图片圆角 */
-            overflow: hidden; /* 确保圆角生效 */
+            border-radius: 12px;
+            overflow: hidden;
             margin-top: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* 添加轻微阴影增强立体感 */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         .guide-text {
             margin: 15px 0;
             color: #333;
             font-size: 16px;
-            padding: 10px 15px;
-            background: rgba(255,255,255,0.8);
-            border-radius: 8px;
-            display: inline-block;
+            padding: 0;
+            background: transparent;
         }
         
         /* 错误提示样式 */
@@ -82,12 +80,10 @@
     </style>
 </head>
 <body>
-    <!-- 微信引导页面 - 新版布局 -->
+    <!-- 微信引导页面 -->
     <div id="weixinGuide" class="weixin-guide">
         <img src="/guide-top.png" alt="第一步：点击右上角三个点" class="guide-image top">
-        
         <p class="guide-text">请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
-        
         <img src="/guide-bottom.png" alt="第二步：选择在浏览器中打开" class="guide-image bottom">
     </div>
     
@@ -105,19 +101,9 @@
             return /MicroMessenger/i.test(navigator.userAgent);
         }
         
-        // 生成随机字符串
-        function generateRandomString() {
-            try {
-                if (window.crypto && crypto.getRandomValues) {
-                    const array = new Uint32Array(1);
-                    crypto.getRandomValues(array);
-                    return array[0].toString(36);
-                }
-                return Math.random().toString(36).substring(2, 15) + 
-                       Math.random().toString(36).substring(2, 15);
-            } catch (e) {
-                return Date.now().toString(36);
-            }
+        // 生成3位随机数
+        function generateRandomNumber() {
+            return Math.floor(Math.random() * 900 + 100); // 100-999之间的随机数
         }
         
         // 显示错误信息
@@ -131,24 +117,30 @@
         // 获取当前URL带随机参数
         function getCurrentUrlWithRandom() {
             const baseUrl = window.location.href.split('?')[0].split('#')[0];
-            const randomParam = "wxrnd=" + generateRandomString();
+            const randomParam = "wxrnd=" + generateRandomNumber();
             return baseUrl + (baseUrl.includes('?') ? '&' : '?') + randomParam;
         }
         
         // 获取目标URL带随机参数
         function getTargetUrl() {
             const baseUrl = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE="; // 请替换为实际地址
-            const randomParam = "t=" + generateRandomString();
+            const randomParam = "t=" + generateRandomNumber();
             return baseUrl + (baseUrl.includes('?') ? '&' : '?') + randomParam;
         }
         
         // 安全跳转函数
         function safeRedirect(url) {
             try {
-                window.location.replace(url);
+                // 优先使用iframe方式跳转（兼容微信）
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = url;
+                document.body.appendChild(iframe);
+                
+                // 备用方案
                 setTimeout(() => {
                     window.location.href = url;
-                }, 500);
+                }, 300);
             } catch (error) {
                 showError(error);
             }
@@ -163,9 +155,7 @@
             } else {
                 try {
                     document.getElementById('weixinGuide').style.display = 'flex';
-                    document.body.addEventListener('click', () => {
-                        alert('请点击右上角···菜单，选择"在浏览器中打开"');
-                    });
+                    // 已移除所有弹窗提醒代码
                 } catch (error) {
                     showError(error);
                 }
