@@ -2,6 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 添加缓存控制确保每次都是新请求 -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>微信浏览器引导跳转</title>
     <style>
@@ -50,8 +55,21 @@
             return /MicroMessenger/i.test(navigator.userAgent);
         }
         
-        // 目标跳转链接
-        const TARGET_URL = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE=";  // 请替换为你的实际链接
+        // 生成随机字符串函数
+        function generateRandomString() {
+            return Math.random().toString(36).substring(2, 15) + 
+                   Math.random().toString(36).substring(2, 15);
+        }
+        
+        // 目标跳转链接（添加随机参数）
+        function getTargetUrl() {
+            const baseUrl = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE=";  // 请替换为你的实际链接
+            const randomParam = "t=" + generateRandomString();
+            
+            // 判断链接是否已有参数
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            return baseUrl + separator + randomParam;
+        }
         
         // 页面加载时判断
         window.onload = function() {
@@ -61,8 +79,8 @@
                 // 在微信中显示引导页面
                 weixinGuide.style.display = 'flex';
             } else {
-                // 不在微信中（已在浏览器中），直接跳转
-                window.location.href = TARGET_URL;
+                // 不在微信中（已在浏览器中），直接跳转（带随机参数）
+                window.location.href = getTargetUrl();
             }
         };
     </script>
