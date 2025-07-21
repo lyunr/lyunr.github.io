@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 强制禁用缓存 -->
+    <!-- 缓存控制 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -17,7 +17,7 @@
             background-color: #f5f5f5;
         }
         
-        /* 微信引导页面样式 */
+        /* 引导页面样式 */
         .weixin-guide {
             display: none;
             flex-direction: column;
@@ -40,13 +40,29 @@
             font-size: 16px;
         }
         
-        /* 加载提示 */
-        .loading {
+        /* 错误提示样式 */
+        .error-message {
+            display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 80%;
+        }
+        
+        .retry-button {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: #07C160;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -58,9 +74,12 @@
         <p class="guide-text">请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
     </div>
     
-    <!-- 加载提示 -->
-    <div id="loading" class="loading">
-        页面加载中...
+    <!-- 错误提示 -->
+    <div id="errorMessage" class="error-message">
+        <h3>网络连接异常</h3>
+        <p>抱歉，页面加载遇到问题，可能是网络连接不稳定。</p>
+        <button id="retryButton" class="retry-button">重试</button>
+        <p style="margin-top: 10px;font-size: 12px;color: #999;">错误代码: <span id="errorCode"></span></p>
     </div>
     
     <script>
@@ -69,25 +88,59 @@
             return /MicroMessenger/i.test(navigator.userAgent);
         }
         
-        // 生成高强度随机字符串
-        function generateStrongRandom() {
-            return crypto.getRandomValues(new Uint32Array(1))[0].toString(36) + 
-                   Date.now().toString(36) +
-                   Math.random().toString(36).substr(2, 9);
+        // 生成随机字符串
+        function generateRandomString() {
+            try {
+                // 优先使用更安全的随机数生成方式
+                if (window.crypto && crypto.getRandomValues) {
+                    const array = new Uint32Array(1);
+                    crypto.getRandomValues(array);
+                    return array[0].toString(36);
+                }
+                return Math.random().toString(36).substring(2, 15) + 
+                       Math.random().toString(36).substring(2, 15);
+            } catch (e) {
+                return Date.now().toString(36);
+            }
         }
         
-        // 获取当前URL带随机参数（微信专用）
-        function getWeixinRedirectUrl() {
+        // 显示错误信息
+        function showError(error) {
+            console.error('页面加载错误:', error);
+            document.getElementById('errorCode').textContent = error.message || error;
+            document.getElementById('errorMessage').style.display = 'block';
+            
+            // 隐藏引导页面（如果已显示）
+            document.getElementById('weixinGuide').style.display = 'none';
+        }
+        
+        // 获取当前URL带随机参数
+        function getCurrentUrlWithRandom() {
             const baseUrl = window.location.href.split('?')[0].split('#')[0];
-            const randomParam = "wxrnd=" + generateStrongRandom();
+            const randomParam = "wxrnd=" + generateRandomString();
             return baseUrl + (baseUrl.includes('?') ? '&' : '?') + randomParam;
         }
         
         // 获取目标URL带随机参数
         function getTargetUrl() {
-            const baseUrl = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE="; // 请替换为实际地址
-            const randomParam = "t=" + generateStrongRandom();
+            const baseUrl = "https://您的目标网站.com"; // 请替换为实际地址
+            const randomParam = "t=" + generateRandomString();
             return baseUrl + (baseUrl.includes('?') ? '&' : '?') + randomParam;
+        }
+        
+        // 安全跳转函数（处理可能的错误）
+        function safeRedirect(url) {
+            try {
+                // 尝试使用replace方法避免历史记录问题
+                window.location.replace(url);
+                
+                // 如果replace被阻止，尝试普通跳转
+                setTimeout(() => {
+                    window.location.href = url;
+                }, 500);
+            } catch (error) {
+                showError(error);
+            }
         }
         
         // 处理微信内跳转逻辑
@@ -96,34 +149,51 @@
             
             // 如果URL中不包含wxrnd参数，说明是首次加载
             if (!currentUrl.includes('wxrnd=')) {
-                // 显示加载提示
-                document.getElementById('loading').style.display = 'block';
-                
-                // 跳转到带随机参数的当前URL（强制刷新）
-                setTimeout(() => {
-                    window.location.href = getWeixinRedirectUrl();
-                }, 100);
+                safeRedirect(getCurrentUrlWithRandom());
             } 
             // 如果已包含wxrnd参数，显示引导页
             else {
-                document.getElementById('weixinGuide').style.display = 'flex';
-                
-                // 添加点击提示
-                document.body.addEventListener('click', () => {
-                    alert('请点击右上角···菜单，选择"在浏览器中打开"');
-                });
+                try {
+                    document.getElementById('weixinGuide').style.display = 'flex';
+                    
+                    // 添加点击提示
+                    document.body.addEventListener('click', () => {
+                        alert('请点击右上角···菜单，选择"在浏览器中打开"');
+                    });
+                } catch (error) {
+                    showError(error);
+                }
             }
         }
         
-        // 页面加载主逻辑
-        window.onload = function() {
-            if (isWeixinBrowser()) {
-                handleWeixinFlow();
-            } else {
-                // 外部浏览器直接跳转到目标页（带随机参数）
-                window.location.href = getTargetUrl();
+        // 初始化函数
+        function init() {
+            try {
+                // 添加重试按钮事件
+                document.getElementById('retryButton').addEventListener('click', () => {
+                    document.getElementById('errorMessage').style.display = 'none';
+                    if (isWeixinBrowser()) {
+                        handleWeixinFlow();
+                    } else {
+                        safeRedirect(getTargetUrl());
+                    }
+                });
+                
+                // 根据环境执行不同逻辑
+                if (isWeixinBrowser()) {
+                    handleWeixinFlow();
+                } else {
+                    safeRedirect(getTargetUrl());
+                }
+            } catch (error) {
+                showError(error);
             }
-        };
+        }
+        
+        // 页面加载后初始化
+        window.addEventListener('load', init);
+        // 如果load事件未触发，DOMContentLoaded后尝试
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
