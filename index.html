@@ -1,94 +1,84 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>微信浏览器引导跳转</title>
+    <title>安全跳转中...</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f5f5f5;
-        }
-        
-        /* 引导页面样式 */
-        .weixin-guide {
-            display: none;
-            flex-direction: column;
-            align-items: center;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
             text-align: center;
-            padding: 20px;
-            height: 100vh;
-            box-sizing: border-box;
         }
-        
+        .guide-container {
+            display: none;
+            max-width: 300px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
         .guide-image {
             width: 100%;
-            max-width: 300px;
-            margin: 0 auto;
+            margin: 10px 0;
+            border-radius: 5px;
         }
-        
-        .guide-image.top {
-            margin-bottom: 15px;
-        }
-        
-        .guide-image.bottom {
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 15px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        
-        .guide-text {
-            margin: 15px 0;
-            color: #333;
-            font-size: 16px;
+        .loading {
+            margin-top: 100px;
+            font-size: 18px;
+            color: #666;
         }
     </style>
 </head>
 <body>
     <!-- 微信引导页面 -->
-    <div id="weixinGuide" class="weixin-guide">
-        <img src="/guide-top.png" alt="第一步：点击右上角三个点" class="guide-image top">
-        <p class="guide-text">请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
-        <img src="/guide-bottom.png" alt="第二步：选择在浏览器中打开" class="guide-image bottom">
+    <div id="weixinGuide" class="guide-container">
+        <img src="guide-top.png" class="guide-image" alt="步骤1">
+        <p>请点击右上角 <b>···</b> 选择"在浏览器中打开"</p>
+        <img src="guide-bottom.png" class="guide-image" alt="步骤2">
     </div>
-    
+
+    <!-- 加载提示 -->
+    <div id="loading" class="loading">跳转准备中，请稍候...</div>
+
     <script>
-        // 检测是否在微信内置浏览器中
-        function isWeixinBrowser() {
+        // 1. 获取目标网址参数
+        function getTargetUrl() {
+            const params = new URLSearchParams(window.location.search);
+            let target = params.get('target') || 'https://www.baidu.com';
+            
+            // 简单安全验证
+            if(!target.startsWith('http')) {
+                target = 'https://www.baidu.com';
+            }
+            
+            // 添加随机参数防止缓存
+            const random = Math.floor(Math.random() * 900) + 100;
+            return target + (target.includes('?') ? '&' : '?') + 't=' + random;
+        }
+
+        // 2. 检测微信浏览器
+        function isWeixin() {
             return /MicroMessenger/i.test(navigator.userAgent);
         }
-        
-        // 生成3位随机数
-        function generateRandomNumber() {
-            return Math.floor(Math.random() * 900 + 100); // 100-999之间的随机数
-        }
-        
-        // 获取目标URL带随机参数
-        function getTargetUrl() {
-            const baseUrl = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE="; // 请替换为实际地址
-            const randomParam = "t=" + generateRandomNumber();
-            return baseUrl + (baseUrl.includes('?') ? '&' : '?') + randomParam;
-        }
-        
-        // 处理外部浏览器跳转
-        function handleExternalBrowserRedirect() {
-            // 直接跳转到目标页（已带随机参数）
-            window.location.href = getTargetUrl();
-        }
-        
-        // 页面加载逻辑
-        window.onload = function() {
-            if (isWeixinBrowser()) {
-                // 微信内直接显示引导页
-                document.getElementById('weixinGuide').style.display = 'flex';
+
+        // 3. 主逻辑
+        function init() {
+            const targetUrl = getTargetUrl();
+            
+            if(isWeixin()) {
+                // 微信内显示引导页
+                document.getElementById('weixinGuide').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
             } else {
-                // 外部浏览器跳转
-                handleExternalBrowserRedirect();
+                // 其他浏览器直接跳转
+                window.location.href = targetUrl;
             }
-        };
+        }
+
+        // 页面加载后执行
+        window.onload = init;
     </script>
 </body>
 </html>
