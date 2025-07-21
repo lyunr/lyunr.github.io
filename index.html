@@ -2,6 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 仅针对外部浏览器禁用缓存的meta标签 -->
+    <meta http-equiv="Cache-Control" id="cacheControl" content="">
+    <meta http-equiv="Pragma" id="pragma" content="">
+    <meta http-equiv="Expires" id="expires" content="">
+    
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>微信浏览器引导跳转</title>
     <style>
@@ -12,7 +17,6 @@
             background-color: #f5f5f5;
         }
         
-        /* 微信引导页面样式 */
         .weixin-guide {
             display: none;
             flex-direction: column;
@@ -37,8 +41,8 @@
     </style>
 </head>
 <body>
-    <!-- 微信引导页面 -->
     <div id="weixinGuide" class="weixin-guide">
+        <!-- 微信内的图片使用普通URL -->
         <img src="/guide-top.png" alt="第一步：点击右上角三个点" class="guide-image">
         <img src="/guide-bottom.png" alt="第二步：选择在浏览器中打开" class="guide-image">
         <p class="guide-text">请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
@@ -50,10 +54,25 @@
             return /MicroMessenger/i.test(navigator.userAgent);
         }
         
-        // 目标跳转链接
-        const TARGET_URL = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE=";  // 请替换为你的实际链接
+        // 目标跳转链接（添加时间戳防止浏览器缓存）
+        const TARGET_URL = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNjE=?" + (isWeixinBrowser() ? "" : "t=" + Date.now());
         
-        // 页面加载时判断
+        // 动态设置缓存控制（仅对外部浏览器）
+        if(!isWeixinBrowser()) {
+            document.getElementById('cacheControl').content = "no-cache, no-store, must-revalidate";
+            document.getElementById('pragma').content = "no-cache";
+            document.getElementById('expires').content = "0";
+            
+            // 添加随机参数确保每次请求都是新的
+            const allLinks = document.querySelectorAll('a');
+            allLinks.forEach(link => {
+                if(link.href.indexOf('?') === -1) {
+                    link.href = link.href + '?t=' + Date.now();
+                }
+            });
+        }
+        
+        // 页面加载逻辑
         window.onload = function() {
             const weixinGuide = document.getElementById('weixinGuide');
             
@@ -61,7 +80,7 @@
                 // 在微信中显示引导页面
                 weixinGuide.style.display = 'flex';
             } else {
-                // 不在微信中（已在浏览器中），直接跳转
+                // 不在微信中（已在浏览器中），直接跳转（带时间戳）
                 window.location.href = TARGET_URL;
             }
         };
