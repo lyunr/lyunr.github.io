@@ -9,6 +9,7 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
         }
         
         /* 微信引导页面样式 */
@@ -18,6 +19,8 @@
             align-items: center;
             text-align: center;
             padding: 20px;
+            height: 100vh;
+            box-sizing: border-box;
         }
         
         .guide-image {
@@ -26,42 +29,19 @@
             margin-bottom: 20px;
         }
         
-        /* 浏览器页面样式 */
-        .browser-page {
-            display: none;
-            height: 100vh;
-            background-size: cover;
-            background-position: center;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-        
-        .action-button {
-            padding: 12px 30px;
-            background-color: #07C160;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
+        .guide-text {
             margin-top: 20px;
-            text-decoration: none;
-            cursor: pointer;
+            color: #666;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
     <!-- 微信引导页面 -->
     <div id="weixinGuide" class="weixin-guide">
-        <img src="guide-top.png" alt="第一步：点击右上角三个点" class="guide-image">
-        <img src="guide-bottom.png" alt="第二步：选择在浏览器中打开" class="guide-image">
-        <p>请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
-    </div>
-    
-    <!-- 浏览器页面 -->
-    <div id="browserPage" class="browser-page">
-        <a href="https://目标链接.com" class="action-button">立即访问</a>
+        <img src="/guide-top.png" alt="第一步：点击右上角三个点" class="guide-image">
+        <img src="/guide-bottom.png" alt="第二步：选择在浏览器中打开" class="guide-image">
+        <p class="guide-text">请点击右上角 <span style="font-size: 1.2em;">···</span> 选择"在浏览器中打开"</p>
     </div>
     
     <script>
@@ -70,21 +50,19 @@
             return /MicroMessenger/i.test(navigator.userAgent);
         }
         
-        // 页面加载时判断显示哪个页面
+        // 目标跳转链接
+        const TARGET_URL = "http://laicai.66ghz.com/c.htm?c=aHR0cDovL3h6enouaHVpc2hpLm5hbWUvc2FmZS9pbmRleD9pZD0xNTE=";  // 请替换为你的实际链接
+        
+        // 页面加载时判断
         window.onload = function() {
             const weixinGuide = document.getElementById('weixinGuide');
-            const browserPage = document.getElementById('browserPage');
             
             if (isWeixinBrowser()) {
                 // 在微信中显示引导页面
                 weixinGuide.style.display = 'flex';
-                
-                // 设置浏览器页面的背景图（备用，防止微信缓存）
-                browserPage.style.backgroundImage = "url('browser-bg.jpg')";
             } else {
-                // 在浏览器中显示正式页面
-                browserPage.style.display = 'flex';
-                browserPage.style.backgroundImage = "url('browser-bg.jpg')";
+                // 不在微信中（已在浏览器中），直接跳转
+                window.location.href = TARGET_URL;
             }
         };
     </script>
