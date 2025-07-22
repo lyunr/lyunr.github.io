@@ -8,7 +8,7 @@ class Utils {
             'links': [],
             'cards': [],
             'config': {
-                adminPassword: 'admin123', // 默认管理员密码
+                adminPassword: '123456', // 默认管理员密码
                 cardLength: 16 // 卡密长度
             }
         };
