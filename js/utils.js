@@ -1,16 +1,28 @@
 // 工具类
 class Utils {
-    // 初始化数据文件
     static initDataFiles() {
+        // 检查是否已经初始化过
+        if (localStorage.getItem('_initialized') === 'true') {
+            return;
+        }
+
         const defaultData = {
-            'users': [],
+            'users': [{
+                id: 'admin-default',
+                username: 'admin',
+                password: 'admin123',
+                registerTime: Date.now(),
+                isAdmin: true,
+                expireTime: 0,
+                remainingCount: 0
+            }],
             'domains': [],
             'links': [],
             'cards': [],
             'config': {
                 adminPassword: 'admin123',
                 cardLength: 16,
-                version: '1.0.0'
+                version: '1.0.1'
             }
         };
 
@@ -19,6 +31,9 @@ class Utils {
                 localStorage.setItem(key, JSON.stringify(value));
             }
         });
+
+        // 标记已初始化
+        localStorage.setItem('_initialized', 'true');
     }
 
     // 获取数据
