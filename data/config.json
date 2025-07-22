@@ -1,0 +1,5 @@
+{
+    "adminPassword": "admin123",
+    "cardKeyLength": 16,
+    "defaultExpiryDays": 30
+}
