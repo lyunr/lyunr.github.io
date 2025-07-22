@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信浏览器引导跳转</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        .guide-text {
+            margin: 20px 0;
+            color: #333;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .steps {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 30px 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        .step-number {
+            background: #07C160;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .step-content {
+            text-align: left;
+            flex: 1;
+        }
+        
+        .open-button {
+            background: #07C160;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 16px;
+            margin: 20px 0;
+            cursor: pointer;
+        }
+        
+        .tips {
+            color: #888;
+            font-size: 14px;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>请在浏览器中打开</h1>
+        <p class="guide-text">微信限制了部分链接的访问，请按照以下步骤在浏览器中打开：</p>
+        
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-content">
+                    点击右上角 <strong>···</strong> 菜单按钮
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-content">
+                    选择 <strong>"在浏览器中打开"</strong> 选项
+                </div>
+            </div>
+        </div>
+        
+        <button id="openBtn" class="open-button">点击跳转</button>
+        
+        <p class="tips">如果无法自动跳转，请复制链接到浏览器中访问</p>
+    </div>
+
+    <script>
+        // 获取目标URL参数
+        function getUrlParam(name) {
+            const reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            const r = window.location.search.substr(1).match(reg);
+            if (r != null) return decodeURIComponent(r[2]);
+            return null;
+        }
+        
+        // 检测是否在微信内置浏览器中
+        function isWeixinBrowser() {
+            return /MicroMessenger/i.test(navigator.userAgent);
+        }
+        
+        // 添加随机参数防止缓存
+        function addRandomParam(url) {
+            const random = Math.random().toString(36).substr(2, 6);
+            return url + (url.includes('?') ? '&' : '?') + 't=' + random;
+        }
+        
+        // 页面加载逻辑
+        window.onload = function() {
+            const targetUrl = getUrlParam('url');
+            const openBtn = document.getElementById('openBtn');
+            
+            if (!targetUrl) {
+                document.body.innerHTML = '<div class="container"><h1>链接错误</h1><p>缺少目标链接参数</p></div>';
+                return;
+            }
+            
+            if (!isWeixinBrowser()) {
+                // 外部浏览器直接跳转
+                window.location.href = addRandomParam(targetUrl);
+                return;
+            }
+            
+            // 微信内显示引导页
+            openBtn.addEventListener('click', function() {
+                // 尝试直接跳转（在部分安卓微信版本可能有效）
+                window.location.href = addRandomParam(targetUrl);
+            });
+        };
+    </script>
+</body>
+</html>
