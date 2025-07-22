@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>系统初始化</title>
+    <script src="js/utils.js"></script>
+</head>
+<body>
+    <h1>系统初始化</h1>
+    <button onclick="initSystem()">点击初始化</button>
+    
+    <script>
+        function initSystem() {
+            Utils.initDataFiles(); // 调用初始化方法
+            alert('系统已初始化！默认管理员密码：admin123');
+            window.location.href = 'admin.html';
+        }
+    </script>
+</body>
+</html>
