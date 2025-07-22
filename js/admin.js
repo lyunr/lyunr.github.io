@@ -14,13 +14,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 // 管理员后台逻辑
 class Admin {
-    // 初始化
     static init() {
-        if (!Auth.checkAdmin()) return;
+        if (!this.verifyPassword()) return;
 
         this.currentTab = 'dashboard';
         this.loadDashboard();
         this.bindEvents();
+        this.setupTabListeners();
+    }
+
+    // 独立密码验证
+    static verifyPassword() {
+        const storedPassword = Utils.getData('config').adminPassword;
+        const inputPassword = prompt("请输入管理员密码：");
+        
+        if (inputPassword !== storedPassword) {
+            alert("访问被拒绝：密码错误");
+            return false;
+        }
+        return true;
     }
 
     // 加载仪表盘
