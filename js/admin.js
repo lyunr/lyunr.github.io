@@ -1,3 +1,17 @@
+// 强制验证管理员密码（不依赖用户系统）
+document.addEventListener('DOMContentLoaded', () => {
+    const storedPassword = Utils.getData('config').adminPassword;
+    const inputPassword = prompt("请输入管理员密码：");
+    
+    if (inputPassword !== storedPassword) {
+        alert("密码错误！");
+        window.location.href = "index.html"; // 跳转回首页
+        return;
+    }
+    
+    // 密码正确则继续加载后台
+    Admin.init();
+});
 // 管理员后台逻辑
 class Admin {
     // 初始化
