@@ -68,45 +68,36 @@
             border-left: 4px solid var(--accent-color);
         }
         
-        /* 原始链接保持原有样式 */
-        .original-link-box {
+        /* 所有链接都保持单行显示 */
+        .link-display {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
         }
         
-        .original-link-text {
+        .link-text {
             flex: 1;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
         }
         
-        .original-copy-btn {
+        .copy-icon {
             cursor: pointer;
             transition: all 0.2s;
             margin-left: 10px;
         }
         
-        .original-copy-btn:hover {
+        .copy-icon:hover {
             transform: scale(1.1);
             color: var(--primary-color);
         }
         
-        /* 防红和防微信链接新样式 */
-        .protected-link-container {
-            margin-top: 10px;
-        }
-        
-        .protected-link-text {
-            word-break: break-all;
-            padding: 8px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-        
+        /* 操作按钮样式 */
         .action-buttons {
             display: flex;
             gap: 10px;
@@ -156,20 +147,6 @@
             border-radius: 10px;
             display: inline-block;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            width: 100%;
-        }
-        
-        .qr-loading {
-            display: none;
-            padding: 20px;
-            color: #666;
-        }
-        
-        .qr-image {
-            max-width: 100%;
-            height: auto;
-            display: none;
         }
         
         .step {
@@ -313,9 +290,9 @@
                             <div class="mb-4">
                                 <h5 class="mb-3"><i class="bi bi-link text-primary me-2"></i>原始链接</h5>
                                 <div class="result-box">
-                                    <div class="original-link-box">
-                                        <span class="original-link-text" id="originalUrl"></span>
-                                        <i class="bi bi-clipboard original-copy-btn" data-target="originalUrl"></i>
+                                    <div class="link-display">
+                                        <div class="link-text" id="originalUrl"></div>
+                                        <i class="bi bi-clipboard copy-icon" data-target="originalUrl"></i>
                                     </div>
                                 </div>
                             </div>
@@ -323,16 +300,17 @@
                             <div class="mb-4" id="antiRedResultContainer">
                                 <h5 class="mb-3"><i class="bi bi-shield-check text-success me-2"></i>防红链接</h5>
                                 <div class="result-box">
-                                    <div class="protected-link-container">
-                                        <div class="protected-link-text" id="antiRedUrl"></div>
-                                        <div class="action-buttons">
-                                            <button class="action-btn copy-btn" data-target="antiRedUrl">
-                                                <i class="bi bi-clipboard"></i>复制链接
-                                            </button>
-                                            <button class="action-btn open-btn" data-target="antiRedUrl">
-                                                <i class="bi bi-box-arrow-up-right"></i>打开链接
-                                            </button>
-                                        </div>
+                                    <div class="link-display">
+                                        <div class="link-text" id="antiRedUrl"></div>
+                                        <i class="bi bi-clipboard copy-icon" data-target="antiRedUrl"></i>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="action-btn copy-btn" data-target="antiRedUrl">
+                                            <i class="bi bi-clipboard"></i>复制链接
+                                        </button>
+                                        <button class="action-btn open-btn" data-target="antiRedUrl">
+                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -340,16 +318,17 @@
                             <div class="mb-4">
                                 <h5 class="mb-3"><i class="bi bi-wechat text-success me-2"></i>防微信拦截链接</h5>
                                 <div class="result-box">
-                                    <div class="protected-link-container">
-                                        <div class="protected-link-text" id="antiBlockUrl"></div>
-                                        <div class="action-buttons">
-                                            <button class="action-btn copy-btn" data-target="antiBlockUrl">
-                                                <i class="bi bi-clipboard"></i>复制链接
-                                            </button>
-                                            <button class="action-btn open-btn" data-target="antiBlockUrl">
-                                                <i class="bi bi-box-arrow-up-right"></i>打开链接
-                                            </button>
-                                        </div>
+                                    <div class="link-display">
+                                        <div class="link-text" id="antiBlockUrl"></div>
+                                        <i class="bi bi-clipboard copy-icon" data-target="antiBlockUrl"></i>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="action-btn copy-btn" data-target="antiBlockUrl">
+                                            <i class="bi bi-clipboard"></i>复制链接
+                                        </button>
+                                        <button class="action-btn open-btn" data-target="antiBlockUrl">
+                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -358,13 +337,7 @@
                                 <h5 class="mb-3"><i class="bi bi-qr-code-scan text-info me-2"></i>二维码</h5>
                                 <div class="text-center">
                                     <div class="qr-code-container mb-3">
-                                        <div id="qrLoading" class="qr-loading">
-                                            <div class="spinner-border text-primary" role="status">
-                                                <span class="visually-hidden">加载中...</span>
-                                            </div>
-                                            <p class="mt-2">正在生成二维码...</p>
-                                        </div>
-                                        <img id="qrCodeImg" class="qr-image" src="" alt="二维码">
+                                        <img id="qrCodeImg" src="" alt="二维码">
                                     </div>
                                     <p class="text-muted">扫描二维码访问防微信拦截链接</p>
                                 </div>
@@ -379,6 +352,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // 存储完整URL
+            const fullUrls = {
+                originalUrl: '',
+                antiRedUrl: '',
+                antiBlockUrl: ''
+            };
+            
             // 生成随机三位数
             function generateRandomNumber() {
                 return Math.floor(Math.random() * 900) + 100; // 100-999
@@ -392,10 +372,9 @@
                     }));
             }
             
-            // 生成防红链接 - 修复后的版本
+            // 生成防红链接
             function generateAntiRedUrl(targetUrl) {
                 const randomNum = generateRandomNumber();
-                // 将随机数作为原始URL的查询参数
                 const urlWithRandom = targetUrl.includes('?') 
                     ? `${targetUrl}&rnd=${randomNum}`
                     : `${targetUrl}?rnd=${randomNum}`;
@@ -405,7 +384,6 @@
             
             // 生成防微信拦截链接
             function generateAntiBlockUrl(targetUrl) {
-                // 假设fz.html在同一个目录下
                 return `${window.location.origin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
             }
             
@@ -415,7 +393,6 @@
                     alert('链接已复制到剪贴板');
                 }).catch(err => {
                     console.error('复制失败:', err);
-                    // 备用方法
                     const textarea = document.createElement('textarea');
                     textarea.value = text;
                     document.body.appendChild(textarea);
@@ -431,68 +408,26 @@
                 window.open(url, '_blank');
             }
             
-            // 生成二维码（修复手机端问题）
-            function generateQRCode(url) {
-                const qrImg = document.getElementById('qrCodeImg');
-                const qrLoading = document.getElementById('qrLoading');
-                
-                // 显示加载指示器
-                qrLoading.style.display = 'block';
-                qrImg.style.display = 'none';
-                
-                // 根据设备选择合适尺寸
-                const size = window.innerWidth < 768 ? 150 : 200;
-                
-                // 使用HTTPS的API，添加时间戳防止缓存
-                const timestamp = new Date().getTime();
-                const apiUrl = `https://api.qrserver.com/v1/create-qr-code/`;
-                const params = new URLSearchParams({
-                    size: `${size}x${size}`,
-                    data: url,
-                    format: 'png',
-                    margin: 10,
-                    qzone: 1,
-                    timestamp: timestamp
-                });
-                
-                qrImg.src = `${apiUrl}?${params.toString()}`;
-                
-                // 图片加载成功
-                qrImg.onload = function() {
-                    qrLoading.style.display = 'none';
-                    qrImg.style.display = 'block';
-                };
-                
-                // 图片加载失败
-                qrImg.onerror = function() {
-                    // 使用Google Charts作为备用
-                    this.src = `https://chart.googleapis.com/chart?chs=${size}x${size}&cht=qr&chl=${encodeURIComponent(url)}&choe=UTF-8&chld=L|2&timestamp=${timestamp}`;
-                };
-            }
-            
             // 绑定按钮事件
             document.addEventListener('click', function(e) {
-                // 原始链接复制按钮
-                if (e.target.classList.contains('original-copy-btn')) {
+                // 复制图标按钮
+                if (e.target.classList.contains('copy-icon')) {
                     const targetId = e.target.getAttribute('data-target');
-                    const text = document.getElementById(targetId).textContent;
-                    copyToClipboard(text);
+                    copyToClipboard(fullUrls[targetId]);
                 }
                 
-                // 防红和防微信链接的复制按钮
+                // 复制按钮
                 if (e.target.closest('.copy-btn')) {
                     const btn = e.target.closest('.copy-btn');
                     const targetId = btn.getAttribute('data-target');
-                    const text = document.getElementById(targetId).textContent;
-                    copyToClipboard(text);
+                    copyToClipboard(fullUrls[targetId]);
                 }
                 
                 // 打开按钮
                 if (e.target.closest('.open-btn')) {
                     const btn = e.target.closest('.open-btn');
                     const targetId = btn.getAttribute('data-target');
-                    const url = document.getElementById(targetId).textContent;
-                    openUrl(url);
+                    openUrl(fullUrls[targetId]);
                 }
             });
             
@@ -505,7 +440,6 @@
                     return;
                 }
                 
-                // 验证URL格式
                 try {
                     new URL(targetUrl);
                 } catch (e) {
@@ -513,33 +447,31 @@
                     return;
                 }
                 
-                // 显示原始链接
+                // 存储并显示原始链接
+                fullUrls.originalUrl = targetUrl;
                 document.getElementById('originalUrl').textContent = targetUrl;
                 
                 // 生成防红链接
                 const isAntiRedEnabled = document.getElementById('antiRedSwitch').checked;
-                let antiRedUrl = '';
-                
                 if (isAntiRedEnabled) {
-                    antiRedUrl = generateAntiRedUrl(targetUrl);
-                    document.getElementById('antiRedUrl').textContent = antiRedUrl;
+                    fullUrls.antiRedUrl = generateAntiRedUrl(targetUrl);
+                    document.getElementById('antiRedUrl').textContent = fullUrls.antiRedUrl;
                     document.getElementById('antiRedResultContainer').style.display = 'block';
                 } else {
                     document.getElementById('antiRedResultContainer').style.display = 'none';
                 }
                 
                 // 生成防微信拦截链接
-                const finalUrl = isAntiRedEnabled ? antiRedUrl : targetUrl;
-                const antiBlockUrl = generateAntiBlockUrl(finalUrl);
-                document.getElementById('antiBlockUrl').textContent = antiBlockUrl;
+                const finalUrl = isAntiRedEnabled ? fullUrls.antiRedUrl : targetUrl;
+                fullUrls.antiBlockUrl = generateAntiBlockUrl(finalUrl);
+                document.getElementById('antiBlockUrl').textContent = fullUrls.antiBlockUrl;
                 
                 // 生成二维码
-                generateQRCode(antiBlockUrl);
+                document.getElementById('qrCodeImg').src = 
+                    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrls.antiBlockUrl)}`;
                 
                 // 显示结果区域
                 document.getElementById('resultsSection').style.display = 'block';
-                
-                // 滚动到结果区域
                 document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
             });
         });
