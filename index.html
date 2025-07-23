@@ -1,285 +1,373 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
-  
-  <title>防洪系统</title>
-  <link rel="shortcut icon" href="favicon1.ico" type="image/x-icon">
-  <link rel="icon" href="favicon1.png" type="image/png">
-  <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      line-height: 1.6;
-      color: #333;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: #f5f5f5;
-    }
-    
-    h1 {
-      color: #2c3e50;
-      text-align: center;
-      margin-bottom: 30px;
-    }
-    
-    .container {
-      background-color: white;
-      border-radius: 8px;
-      padding: 25px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    .form-group {
-      margin-bottom: 20px;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
-    }
-    
-    input[type="text"],
-    select {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    
-    button {
-      background-color: #2856fc;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      width: 100%;
-      transition: background-color 0.3s;
-    }
-    
-    button:hover {
-      background-color: #2980b9;
-    }
-    
-    .error {
-      color: #e74c3c;
-      margin-top: 10px;
-      font-weight: bold;
-    }
-    
-    .result {
-      margin-top: 30px;
-      padding: 20px;
-      background-color: #f9f9f9;
-      border-radius: 4px;
-      display: none;
-    }
-    
-    .result h2 {
-      margin-top: 0;
-      color: #2c3e50;
-    }
-    
-    .qr-container {
-      margin: 20px 0;
-      text-align: center;
-    }
-    
-    #qrCanvas {
-      border: 1px solid #ddd;
-      padding: 10px;
-      background-color: white;
-    }
-    
-    .copy-btn {
-      background-color: #2ecc71;
-      margin-top: 15px;
-    }
-    
-    .copy-btn:hover {
-      background-color: #27ae60;
-    }
-    
-    .instructions {
-      margin-top: 30px;
-      padding: 15px;
-      background-color: #eaf7ff;
-      border-radius: 4px;
-    }
-    
-    .instructions h3 {
-      margin-top: 0;
-    }
-    
-    .instructions ol {
-      padding-left: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级链接防护系统</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border: none;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: 600;
+            border-bottom: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .form-control {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .result-box {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .copy-btn {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .copy-btn:hover {
+            transform: scale(1.1);
+            color: var(--primary-color);
+        }
+        
+        .qr-code-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(67, 97, 238, 0.05);
+            border-radius: 8px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .switch-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>众耀科技防红强开链接生成器</h1>
-    <h1>授权联系VX:RS112900</h1>
-    
-    <div class="form-group">
-      <label for="originalUrl">原始链接：</label>
-      <input type="text" id="originalUrl" placeholder="请输入需要转换的链接务必以https://开头">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex align-items-center">
+                        <i class="bi bi-shield-lock me-2" style="font-size: 1.5rem;"></i>
+                        <h4 class="mb-0">高级链接防护系统</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div>
+                                <h5 class="mb-1">输入目标链接</h5>
+                                <p class="mb-0 text-muted">请输入您需要保护的目标网址</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <input type="url" class="form-control" id="targetUrl" placeholder="https://example.com" required>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div>
+                                <h5 class="mb-1">防红保护</h5>
+                                <p class="mb-0 text-muted">开启后可以防止链接变红失效</p>
+                            </div>
+                        </div>
+                        
+                        <div class="switch-container mb-3">
+                            <label class="switch">
+                                <input type="checkbox" id="antiRedSwitch" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <span>开启防红保护</span>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div>
+                                <h5 class="mb-1">生成防护链接</h5>
+                                <p class="mb-0 text-muted">点击下方按钮生成防护链接</p>
+                            </div>
+                        </div>
+                        
+                        <button id="generateBtn" class="btn btn-primary w-100 py-3 fw-bold">
+                            <i class="bi bi-magic me-2"></i>生成防护链接
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="resultsSection" style="display: none;">
+                    <div class="card mb-4">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="bi bi-link-45deg me-2" style="font-size: 1.5rem;"></i>
+                            <h4 class="mb-0">生成结果</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h5 class="mb-3"><i class="bi bi-link text-primary me-2"></i>原始链接</h5>
+                                <div class="result-box d-flex justify-content-between align-items-center">
+                                    <span id="originalUrl" class="text-truncate"></span>
+                                    <i class="bi bi-clipboard copy-btn" data-target="originalUrl"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4" id="antiRedResultContainer">
+                                <h5 class="mb-3"><i class="bi bi-shield-check text-success me-2"></i>防红链接</h5>
+                                <div class="result-box d-flex justify-content-between align-items-center">
+                                    <span id="antiRedUrl" class="text-truncate"></span>
+                                    <i class="bi bi-clipboard copy-btn" data-target="antiRedUrl"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5 class="mb-3"><i class="bi bi-wechat text-success me-2"></i>防微信拦截链接</h5>
+                                <div class="result-box d-flex justify-content-between align-items-center">
+                                    <span id="antiBlockUrl" class="text-truncate"></span>
+                                    <i class="bi bi-clipboard copy-btn" data-target="antiBlockUrl"></i>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5 class="mb-3"><i class="bi bi-qr-code-scan text-info me-2"></i>二维码</h5>
+                                <div class="text-center">
+                                    <div class="qr-code-container mb-3">
+                                        <img id="qrCodeImg" src="" alt="二维码">
+                                    </div>
+                                    <p class="text-muted">扫描二维码访问防微信拦截链接</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <div class="form-group">
-      <label for="domainSelect">选择防红域名：</label>
-      <select id="domainSelect">
-        <option value="">-- 请选择 --</option>
-        <option value="https://zykjfhxt13.github.io/wx-redirect">防红通道1(部分地区拦截)</option>
-        <option value="https://zhongyaokj001.github.io/wx-redirect">防红通道2(部分地区拦截)</option>
-        <option value="https://zykj-fhxt001.github.io/wx-redirect">防红通道3(部分地区拦截)</option>
-        <option value="https://zykjtz.github.io/wx-redirect">防红跳转通道(部分地区拦截)</option>
-        <option value="http://gogog001.c.89oy.com/zykj.htm">防红通道4</option>
-        <option value="http://udp.api.cn.jsir.cn/zykj.htm">防红通道5</option>
-        <option value="http://gogog002.c.89oy.com/zykj.htm">防红通道6</option>
-        <option value="http://udpzykj.api.cn.jsir.cn/zykj.htm">防红通道7</option>
-        <option value="http://gogog003.c.89oy.com/zykj.htm">防红通道8</option>
-        <option value="http://udpnice.api.cn.jsir.cn/zykj.htm">防红通道9</option>
-        <option value="http://gogog004.c.89oy.com/zykj.htm">防红通道10</option>
-        <option value="http://udpurl.api.cn.jsir.cn/zykj.htm">防红通道11</option>
-        <option value="http://gogog005.c.89oy.com/zykj.htm">防红通道12</option>
-        <option value="http://udpsafe.api.cn.jsir.cn/zykj.htm">防红通道13</option>
-        <option value="http://gogog006.c.89oy.com/zykj.htm">防红通道14</option>
-        <option value="http://udp798.api.cn.jsir.cn/zykj.htm">防红通道15</option>
-        <!-- <option value="custom">自定义域名</option> -->
-      </select>
-      <input type="text" id="customDomain" placeholder="请输入自定义域名" style="display: none; margin-top: 10px;">
-    </div>
-    
-    <button id="generateBtn">生成防红链接和二维码</button>
-    <p class="error" id="errorMsg"></p>
-    
-    <div class="result" id="resultContainer">
-      <h2>生成的防红链接：</h2>
-      <p id="finalUrl"></p>
-      <button class="copy-btn" id="copyBtn">复制链接</button>
-      
-      <div class="qr-container">
-        <h2>二维码：</h2>
-        <canvas id="qrCanvas"></canvas>
-        <p>扫描二维码访问防红链接</p>
-      </div>
-    </div>
-    
-    <div class="instructions">
-      <h3>使用说明：</h3>
-      <ol>
-        <li>输入需要转换的原始链接</li>
-        <li>选择预设的防红域名</li>
-        <li>点击生成按钮获取防红链接和二维码</li>
-        <li>复制链接或扫描二维码使用</li>
-      </ol>
-      <p><strong>注意：</strong>请确保您的原始域名已配置好ssl证书打开https功能。</p>
-      <p><strong>同款系统搭建联系VX：</strong>RS112900</p>
-    </div>
-  </div>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const domainSelect = document.getElementById('domainSelect');
-      const customDomainInput = document.getElementById('customDomain');
-      const generateBtn = document.getElementById('generateBtn');
-      const errorMsg = document.getElementById('errorMsg');
-      const resultContainer = document.getElementById('resultContainer');
-      const finalUrl = document.getElementById('finalUrl');
-      const qrCanvas = document.getElementById('qrCanvas');
-      const copyBtn = document.getElementById('copyBtn');
-      
-      // 显示/隐藏自定义域名输入框
-      domainSelect.addEventListener('change', function() {
-        customDomainInput.style.display = this.value === 'custom' ? 'block' : 'none';
-      });
-      
-      // 生成防红链接和二维码
-      generateBtn.addEventListener('click', generateQRCode);
-      
-      // 复制链接
-      copyBtn.addEventListener('click', copyUrl);
-      
-      function generateQRCode() {
-        // 重置状态
-        errorMsg.textContent = '';
-        resultContainer.style.display = 'none';
-        
-        // 获取输入值
-        const originalUrl = document.getElementById('originalUrl').value.trim();
-        let domain = domainSelect.value;
-        
-        // 验证输入
-        if (!originalUrl) {
-          errorMsg.textContent = '请输入原始链接！';
-          return;
-        }
-        
-        if (!domain) {
-          errorMsg.textContent = '请选择防红域名！';
-          return;
-        }
-        
-        // 处理自定义域名
-        if (domain === 'custom') {
-          domain = customDomainInput.value.trim();
-          if (!domain) {
-            errorMsg.textContent = '请输入自定义域名！';
-            return;
-          }
-        }
-        
-        // 确保域名格式正确
-        if (!domain.startsWith('http://') && !domain.startsWith('https://')) {
-          domain = 'https://' + domain;
-        }
-        
-        // 移除域名末尾的斜杠
-        // domain = domain.replace(/\/+$/, '');
-        
-        // 直接对原始URL进行Base64编码（移除encodeURIComponent）
-        const encodedUrl = btoa(originalUrl);
-        
-        // 生成最终防红链接
-        const redUrl = `${domain}?c=${encodedUrl}`;
-        
-        // 显示结果
-        finalUrl.textContent = redUrl;
-        resultContainer.style.display = 'block';
-        
-        // 生成二维码
-        QRCode.toCanvas(qrCanvas, redUrl, {
-          width: 200,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#ffffff'
-          }
-        }, function(error) {
-          if (error) {
-            errorMsg.textContent = '二维码生成失败: ' + error;
-          }
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 生成随机三位数
+            function generateRandomNumber() {
+                return Math.floor(Math.random() * 900) + 100; // 100-999
+            }
+            
+            // Base64编码
+            function base64Encode(str) {
+                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, 
+                    function(match, p1) {
+                        return String.fromCharCode('0x' + p1);
+                    }));
+            }
+            
+            // 生成防红链接
+            function generateAntiRedUrl(targetUrl) {
+                const base64Url = base64Encode(targetUrl);
+                const randomNum = generateRandomNumber();
+                // 这里替换为你实际的防红域名
+                return `https://your-anti-red-domain.com/?c=${base64Url}${randomNum}`;
+            }
+            
+            // 生成防微信拦截链接
+            function generateAntiBlockUrl(targetUrl) {
+                // 假设fz.html在同一个目录下
+                return `${window.location.origin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
+            }
+            
+            // 复制到剪贴板
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('链接已复制到剪贴板');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    // 备用方法
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('链接已复制到剪贴板');
+                });
+            }
+            
+            // 绑定复制按钮事件
+            document.addEventListener('click', function(e) {
+                if (e.target.classList.contains('copy-btn')) {
+                    const targetId = e.target.getAttribute('data-target');
+                    const text = document.getElementById(targetId).textContent;
+                    copyToClipboard(text);
+                }
+            });
+            
+            // 生成按钮点击事件
+            document.getElementById('generateBtn').addEventListener('click', function() {
+                const targetUrl = document.getElementById('targetUrl').value.trim();
+                
+                if (!targetUrl) {
+                    alert('请输入目标链接');
+                    return;
+                }
+                
+                // 验证URL格式
+                try {
+                    new URL(targetUrl);
+                } catch (e) {
+                    alert('请输入有效的URL，例如: https://example.com');
+                    return;
+                }
+                
+                // 显示原始链接
+                document.getElementById('originalUrl').textContent = targetUrl;
+                
+                // 生成防红链接
+                const isAntiRedEnabled = document.getElementById('antiRedSwitch').checked;
+                let antiRedUrl = '';
+                
+                if (isAntiRedEnabled) {
+                    antiRedUrl = generateAntiRedUrl(targetUrl);
+                    document.getElementById('antiRedUrl').textContent = antiRedUrl;
+                    document.getElementById('antiRedResultContainer').style.display = 'block';
+                } else {
+                    document.getElementById('antiRedResultContainer').style.display = 'none';
+                }
+                
+                // 生成防微信拦截链接
+                const finalUrl = isAntiRedEnabled ? antiRedUrl : targetUrl;
+                const antiBlockUrl = generateAntiBlockUrl(finalUrl);
+                document.getElementById('antiBlockUrl').textContent = antiBlockUrl;
+                
+                // 生成二维码
+                document.getElementById('qrCodeImg').src = 
+                    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(antiBlockUrl)}`;
+                
+                // 显示结果区域
+                document.getElementById('resultsSection').style.display = 'block';
+                
+                // 滚动到结果区域
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            });
         });
-      }
-      
-      function copyUrl() {
-        const text = finalUrl.textContent;
-        navigator.clipboard.writeText(text).then(function() {
-          alert('链接已复制到剪贴板！');
-        }).catch(function(err) {
-          console.error('复制失败: ', err);
-          alert('复制失败，请手动复制链接');
-        });
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
