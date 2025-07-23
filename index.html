@@ -156,6 +156,20 @@
             border-radius: 10px;
             display: inline-block;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            width: 100%;
+        }
+        
+        .qr-loading {
+            display: none;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .qr-image {
+            max-width: 100%;
+            height: auto;
+            display: none;
         }
         
         .step {
@@ -344,7 +358,13 @@
                                 <h5 class="mb-3"><i class="bi bi-qr-code-scan text-info me-2"></i>二维码</h5>
                                 <div class="text-center">
                                     <div class="qr-code-container mb-3">
-                                        <img id="qrCodeImg" src="" alt="二维码">
+                                        <div id="qrLoading" class="qr-loading">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">加载中...</span>
+                                            </div>
+                                            <p class="mt-2">正在生成二维码...</p>
+                                        </div>
+                                        <img id="qrCodeImg" class="qr-image" src="" alt="二维码">
                                     </div>
                                     <p class="text-muted">扫描二维码访问防微信拦截链接</p>
                                 </div>
@@ -411,6 +431,45 @@
                 window.open(url, '_blank');
             }
             
+            // 生成二维码（修复手机端问题）
+            function generateQRCode(url) {
+                const qrImg = document.getElementById('qrCodeImg');
+                const qrLoading = document.getElementById('qrLoading');
+                
+                // 显示加载指示器
+                qrLoading.style.display = 'block';
+                qrImg.style.display = 'none';
+                
+                // 根据设备选择合适尺寸
+                const size = window.innerWidth < 768 ? 150 : 200;
+                
+                // 使用HTTPS的API，添加时间戳防止缓存
+                const timestamp = new Date().getTime();
+                const apiUrl = `https://api.qrserver.com/v1/create-qr-code/`;
+                const params = new URLSearchParams({
+                    size: `${size}x${size}`,
+                    data: url,
+                    format: 'png',
+                    margin: 10,
+                    qzone: 1,
+                    timestamp: timestamp
+                });
+                
+                qrImg.src = `${apiUrl}?${params.toString()}`;
+                
+                // 图片加载成功
+                qrImg.onload = function() {
+                    qrLoading.style.display = 'none';
+                    qrImg.style.display = 'block';
+                };
+                
+                // 图片加载失败
+                qrImg.onerror = function() {
+                    // 使用Google Charts作为备用
+                    this.src = `https://chart.googleapis.com/chart?chs=${size}x${size}&cht=qr&chl=${encodeURIComponent(url)}&choe=UTF-8&chld=L|2&timestamp=${timestamp}`;
+                };
+            }
+            
             // 绑定按钮事件
             document.addEventListener('click', function(e) {
                 // 原始链接复制按钮
@@ -475,8 +534,7 @@
                 document.getElementById('antiBlockUrl').textContent = antiBlockUrl;
                 
                 // 生成二维码
-                document.getElementById('qrCodeImg').src = 
-                    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(antiBlockUrl)}`;
+                generateQRCode(antiBlockUrl);
                 
                 // 显示结果区域
                 document.getElementById('resultsSection').style.display = 'block';
