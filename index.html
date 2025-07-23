@@ -1,1 +1,285 @@
-zzzz
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+  
+  <title>防洪系统</title>
+  <link rel="shortcut icon" href="favicon1.ico" type="image/x-icon">
+  <link rel="icon" href="favicon1.png" type="image/png">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    
+    h1 {
+      color: #2c3e50;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    
+    .container {
+      background-color: white;
+      border-radius: 8px;
+      padding: 25px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    button {
+      background-color: #2856fc;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: #2980b9;
+    }
+    
+    .error {
+      color: #e74c3c;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+      display: none;
+    }
+    
+    .result h2 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    
+    .qr-container {
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    #qrCanvas {
+      border: 1px solid #ddd;
+      padding: 10px;
+      background-color: white;
+    }
+    
+    .copy-btn {
+      background-color: #2ecc71;
+      margin-top: 15px;
+    }
+    
+    .copy-btn:hover {
+      background-color: #27ae60;
+    }
+    
+    .instructions {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #eaf7ff;
+      border-radius: 4px;
+    }
+    
+    .instructions h3 {
+      margin-top: 0;
+    }
+    
+    .instructions ol {
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>众耀科技防红强开链接生成器</h1>
+    <h1>授权联系VX:RS112900</h1>
+    
+    <div class="form-group">
+      <label for="originalUrl">原始链接：</label>
+      <input type="text" id="originalUrl" placeholder="请输入需要转换的链接务必以https://开头">
+    </div>
+    
+    <div class="form-group">
+      <label for="domainSelect">选择防红域名：</label>
+      <select id="domainSelect">
+        <option value="">-- 请选择 --</option>
+        <option value="https://zykjfhxt13.github.io/wx-redirect">防红通道1(部分地区拦截)</option>
+        <option value="https://zhongyaokj001.github.io/wx-redirect">防红通道2(部分地区拦截)</option>
+        <option value="https://zykj-fhxt001.github.io/wx-redirect">防红通道3(部分地区拦截)</option>
+        <option value="https://zykjtz.github.io/wx-redirect">防红跳转通道(部分地区拦截)</option>
+        <option value="http://gogog001.c.89oy.com/zykj.htm">防红通道4</option>
+        <option value="http://udp.api.cn.jsir.cn/zykj.htm">防红通道5</option>
+        <option value="http://gogog002.c.89oy.com/zykj.htm">防红通道6</option>
+        <option value="http://udpzykj.api.cn.jsir.cn/zykj.htm">防红通道7</option>
+        <option value="http://gogog003.c.89oy.com/zykj.htm">防红通道8</option>
+        <option value="http://udpnice.api.cn.jsir.cn/zykj.htm">防红通道9</option>
+        <option value="http://gogog004.c.89oy.com/zykj.htm">防红通道10</option>
+        <option value="http://udpurl.api.cn.jsir.cn/zykj.htm">防红通道11</option>
+        <option value="http://gogog005.c.89oy.com/zykj.htm">防红通道12</option>
+        <option value="http://udpsafe.api.cn.jsir.cn/zykj.htm">防红通道13</option>
+        <option value="http://gogog006.c.89oy.com/zykj.htm">防红通道14</option>
+        <option value="http://udp798.api.cn.jsir.cn/zykj.htm">防红通道15</option>
+        <!-- <option value="custom">自定义域名</option> -->
+      </select>
+      <input type="text" id="customDomain" placeholder="请输入自定义域名" style="display: none; margin-top: 10px;">
+    </div>
+    
+    <button id="generateBtn">生成防红链接和二维码</button>
+    <p class="error" id="errorMsg"></p>
+    
+    <div class="result" id="resultContainer">
+      <h2>生成的防红链接：</h2>
+      <p id="finalUrl"></p>
+      <button class="copy-btn" id="copyBtn">复制链接</button>
+      
+      <div class="qr-container">
+        <h2>二维码：</h2>
+        <canvas id="qrCanvas"></canvas>
+        <p>扫描二维码访问防红链接</p>
+      </div>
+    </div>
+    
+    <div class="instructions">
+      <h3>使用说明：</h3>
+      <ol>
+        <li>输入需要转换的原始链接</li>
+        <li>选择预设的防红域名</li>
+        <li>点击生成按钮获取防红链接和二维码</li>
+        <li>复制链接或扫描二维码使用</li>
+      </ol>
+      <p><strong>注意：</strong>请确保您的原始域名已配置好ssl证书打开https功能。</p>
+      <p><strong>同款系统搭建联系VX：</strong>RS112900</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const domainSelect = document.getElementById('domainSelect');
+      const customDomainInput = document.getElementById('customDomain');
+      const generateBtn = document.getElementById('generateBtn');
+      const errorMsg = document.getElementById('errorMsg');
+      const resultContainer = document.getElementById('resultContainer');
+      const finalUrl = document.getElementById('finalUrl');
+      const qrCanvas = document.getElementById('qrCanvas');
+      const copyBtn = document.getElementById('copyBtn');
+      
+      // 显示/隐藏自定义域名输入框
+      domainSelect.addEventListener('change', function() {
+        customDomainInput.style.display = this.value === 'custom' ? 'block' : 'none';
+      });
+      
+      // 生成防红链接和二维码
+      generateBtn.addEventListener('click', generateQRCode);
+      
+      // 复制链接
+      copyBtn.addEventListener('click', copyUrl);
+      
+      function generateQRCode() {
+        // 重置状态
+        errorMsg.textContent = '';
+        resultContainer.style.display = 'none';
+        
+        // 获取输入值
+        const originalUrl = document.getElementById('originalUrl').value.trim();
+        let domain = domainSelect.value;
+        
+        // 验证输入
+        if (!originalUrl) {
+          errorMsg.textContent = '请输入原始链接！';
+          return;
+        }
+        
+        if (!domain) {
+          errorMsg.textContent = '请选择防红域名！';
+          return;
+        }
+        
+        // 处理自定义域名
+        if (domain === 'custom') {
+          domain = customDomainInput.value.trim();
+          if (!domain) {
+            errorMsg.textContent = '请输入自定义域名！';
+            return;
+          }
+        }
+        
+        // 确保域名格式正确
+        if (!domain.startsWith('http://') && !domain.startsWith('https://')) {
+          domain = 'https://' + domain;
+        }
+        
+        // 移除域名末尾的斜杠
+        // domain = domain.replace(/\/+$/, '');
+        
+        // 直接对原始URL进行Base64编码（移除encodeURIComponent）
+        const encodedUrl = btoa(originalUrl);
+        
+        // 生成最终防红链接
+        const redUrl = `${domain}?c=${encodedUrl}`;
+        
+        // 显示结果
+        finalUrl.textContent = redUrl;
+        resultContainer.style.display = 'block';
+        
+        // 生成二维码
+        QRCode.toCanvas(qrCanvas, redUrl, {
+          width: 200,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#ffffff'
+          }
+        }, function(error) {
+          if (error) {
+            errorMsg.textContent = '二维码生成失败: ' + error;
+          }
+        });
+      }
+      
+      function copyUrl() {
+        const text = finalUrl.textContent;
+        navigator.clipboard.writeText(text).then(function() {
+          alert('链接已复制到剪贴板！');
+        }).catch(function(err) {
+          console.error('复制失败: ', err);
+          alert('复制失败，请手动复制链接');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
