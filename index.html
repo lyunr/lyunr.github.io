@@ -19,8 +19,13 @@
         body {
             background-color: #f5f7fa;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            touch-action: pan-y;
             -webkit-text-size-adjust: 100%;
+            overflow-x: hidden;
+            touch-action: pan-y;
+        }
+        
+        html {
+            overflow-x: hidden;
         }
         
         .card {
@@ -514,13 +519,17 @@
                 document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
             });
             
-            // 禁止缩放
+            // 禁止缩放但允许滚动
             document.addEventListener('gesturestart', function(e) {
-                e.preventDefault();
-            });
+                if (e.scale !== 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
             
+            // 确保触摸事件不会阻止滚动
             document.addEventListener('touchmove', function(e) {
-                if(e.scale !== 1) {
+                // 只阻止缩放，不阻止滚动
+                if (e.scale !== 1 && e.scale !== undefined) {
                     e.preventDefault();
                 }
             }, { passive: false });
