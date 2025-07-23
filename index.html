@@ -280,12 +280,15 @@
                     }));
             }
             
-            // 生成防红链接
+            // 生成防红链接 - 修复后的版本
             function generateAntiRedUrl(targetUrl) {
-                const base64Url = base64Encode(targetUrl);
                 const randomNum = generateRandomNumber();
-                // 这里替换为你实际的防红域名
-                return `https://laicai.66ghz.com/c.htm?c=${base64Url}${randomNum}`;
+                // 将随机数作为原始URL的查询参数
+                const urlWithRandom = targetUrl.includes('?') 
+                    ? `${targetUrl}&rnd=${randomNum}`
+                    : `${targetUrl}?rnd=${randomNum}`;
+                const base64Url = base64Encode(urlWithRandom);
+                return `http://laicai.66ghz.com/c.htm?c=${base64Url}`;
             }
             
             // 生成防微信拦截链接
