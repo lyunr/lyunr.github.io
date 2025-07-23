@@ -6,6 +6,7 @@
     <title>高级链接防护系统</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
         :root {
             --primary-color: #4361ee;
@@ -68,7 +69,6 @@
             border-left: 4px solid var(--accent-color);
         }
         
-        /* 所有链接都保持单行显示 */
         .link-display {
             display: flex;
             justify-content: space-between;
@@ -97,7 +97,6 @@
             color: var(--primary-color);
         }
         
-        /* 操作按钮样式 */
         .action-buttons {
             display: flex;
             gap: 10px;
@@ -147,6 +146,18 @@
             border-radius: 10px;
             display: inline-block;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            width: 100%;
+        }
+        
+        #qrcodeCanvas {
+            margin: 0 auto;
+        }
+        
+        #qrcodeCanvas img, 
+        #qrcodeCanvas canvas {
+            max-width: 100%;
+            height: auto;
         }
         
         .step {
@@ -336,9 +347,7 @@
                             <div class="mb-4">
                                 <h5 class="mb-3"><i class="bi bi-qr-code-scan text-info me-2"></i>二维码</h5>
                                 <div class="text-center">
-                                    <div class="qr-code-container mb-3">
-                                        <img id="qrCodeImg" src="" alt="二维码">
-                                    </div>
+                                    <div class="qr-code-container mb-3" id="qrcodeCanvas"></div>
                                     <p class="text-muted">扫描二维码访问防微信拦截链接</p>
                                 </div>
                             </div>
@@ -385,6 +394,25 @@
             // 生成防微信拦截链接
             function generateAntiBlockUrl(targetUrl) {
                 return `${window.location.origin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
+            }
+            
+            // 生成二维码
+            function generateQRCode(url) {
+                const qrcodeContainer = document.getElementById('qrcodeCanvas');
+                qrcodeContainer.innerHTML = ''; // 清空容器
+                
+                // 根据设备宽度设置二维码尺寸
+                const size = window.innerWidth < 768 ? 150 : 200;
+                
+                // 使用QRCode.js生成二维码
+                new QRCode(qrcodeContainer, {
+                    text: url,
+                    width: size,
+                    height: size,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.H
+                });
             }
             
             // 复制到剪贴板
@@ -467,8 +495,7 @@
                 document.getElementById('antiBlockUrl').textContent = fullUrls.antiBlockUrl;
                 
                 // 生成二维码
-                document.getElementById('qrCodeImg').src = 
-                    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(fullUrls.antiBlockUrl)}`;
+                generateQRCode(fullUrls.antiBlockUrl);
                 
                 // 显示结果区域
                 document.getElementById('resultsSection').style.display = 'block';
