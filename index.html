@@ -277,10 +277,10 @@
                 return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, 
                     function(match, p1) {
                         return String.fromCharCode('0x' + p1);
-                    }));
+                    });
             }
             
-            // 生成防红链接 - 修复后的版本
+            // 生成防红链接
             function generateAntiRedUrl(targetUrl) {
                 const randomNum = generateRandomNumber();
                 // 将随机数作为原始URL的查询参数
@@ -291,10 +291,30 @@
                 return `http://laicai.66ghz.com/c.htm?c=${base64Url}`;
             }
             
-            // 生成防微信拦截链接
+            // 生成防微信拦截链接 - 修改后的版本
             function generateAntiBlockUrl(targetUrl) {
-                // 假设fz.html在同一个目录下
-                return `${window.location.origin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
+                // 创建一个即时跳转的HTML页面
+                const htmlContent = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta http-equiv="refresh" content="0;url=${encodeURIComponent(targetUrl)}">
+                        <title>正在跳转...</title>
+                        <script>
+                            window.location.href = "${targetUrl.replace(/"/g, '\\"')}";
+                        </script>
+                    </head>
+                    <body>
+                        <p>如果页面没有自动跳转，请<a href="${targetUrl.replace(/"/g, '\\"')}">点击这里</a></p>
+                    </body>
+                    </html>
+                `;
+                
+                // 创建Blob对象
+                const blob = new Blob([htmlContent], {type: 'text/html'});
+                // 生成对象URL
+                return URL.createObjectURL(blob);
             }
             
             // 复制到剪贴板
