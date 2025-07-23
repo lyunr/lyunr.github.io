@@ -6,7 +6,8 @@
     <title>高级链接防护系统</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- 修改为正确的QRCode库 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --primary-color: #4361ee;
@@ -404,7 +405,7 @@
                 // 根据设备宽度设置二维码尺寸
                 const size = window.innerWidth < 768 ? 150 : 200;
                 
-                // 使用QRCode.js生成二维码
+                // 使用QRCode生成二维码
                 new QRCode(qrcodeContainer, {
                     text: url,
                     width: size,
@@ -468,10 +469,16 @@
                     return;
                 }
                 
+                // 更宽松的URL验证
+                if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                    alert('请输入有效的URL，必须以http://或https://开头');
+                    return;
+                }
+                
                 try {
                     new URL(targetUrl);
                 } catch (e) {
-                    alert('请输入有效的URL，例如: https://example.com');
+                    alert('请输入有效的URL格式，例如: https://example.com');
                     return;
                 }
                 
