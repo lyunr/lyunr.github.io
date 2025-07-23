@@ -68,10 +68,48 @@
             border-left: 4px solid var(--accent-color);
         }
         
+        /* 原始链接保持原有样式 */
+        .original-link-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .original-link-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .original-copy-btn {
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 10px;
+        }
+        
+        .original-copy-btn:hover {
+            transform: scale(1.1);
+            color: var(--primary-color);
+        }
+        
+        /* 防红和防微信链接新样式 */
+        .protected-link-container {
+            margin-top: 10px;
+        }
+        
+        .protected-link-text {
+            word-break: break-all;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
         .action-buttons {
             display: flex;
             gap: 10px;
-            margin-top: 10px;
         }
         
         .action-btn {
@@ -197,14 +235,6 @@
         input:checked + .slider:before {
             transform: translateX(26px);
         }
-        
-        .url-text {
-            word-break: break-all;
-            padding: 8px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            font-size: 14px;
-        }
     </style>
 </head>
 <body>
@@ -269,14 +299,9 @@
                             <div class="mb-4">
                                 <h5 class="mb-3"><i class="bi bi-link text-primary me-2"></i>原始链接</h5>
                                 <div class="result-box">
-                                    <div class="url-text" id="originalUrl"></div>
-                                    <div class="action-buttons">
-                                        <button class="action-btn copy-btn" data-target="originalUrl">
-                                            <i class="bi bi-clipboard"></i>复制链接
-                                        </button>
-                                        <button class="action-btn open-btn" data-target="originalUrl">
-                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
-                                        </button>
+                                    <div class="original-link-box">
+                                        <span class="original-link-text" id="originalUrl"></span>
+                                        <i class="bi bi-clipboard original-copy-btn" data-target="originalUrl"></i>
                                     </div>
                                 </div>
                             </div>
@@ -284,14 +309,16 @@
                             <div class="mb-4" id="antiRedResultContainer">
                                 <h5 class="mb-3"><i class="bi bi-shield-check text-success me-2"></i>防红链接</h5>
                                 <div class="result-box">
-                                    <div class="url-text" id="antiRedUrl"></div>
-                                    <div class="action-buttons">
-                                        <button class="action-btn copy-btn" data-target="antiRedUrl">
-                                            <i class="bi bi-clipboard"></i>复制链接
-                                        </button>
-                                        <button class="action-btn open-btn" data-target="antiRedUrl">
-                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
-                                        </button>
+                                    <div class="protected-link-container">
+                                        <div class="protected-link-text" id="antiRedUrl"></div>
+                                        <div class="action-buttons">
+                                            <button class="action-btn copy-btn" data-target="antiRedUrl">
+                                                <i class="bi bi-clipboard"></i>复制链接
+                                            </button>
+                                            <button class="action-btn open-btn" data-target="antiRedUrl">
+                                                <i class="bi bi-box-arrow-up-right"></i>打开链接
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -299,14 +326,16 @@
                             <div class="mb-4">
                                 <h5 class="mb-3"><i class="bi bi-wechat text-success me-2"></i>防微信拦截链接</h5>
                                 <div class="result-box">
-                                    <div class="url-text" id="antiBlockUrl"></div>
-                                    <div class="action-buttons">
-                                        <button class="action-btn copy-btn" data-target="antiBlockUrl">
-                                            <i class="bi bi-clipboard"></i>复制链接
-                                        </button>
-                                        <button class="action-btn open-btn" data-target="antiBlockUrl">
-                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
-                                        </button>
+                                    <div class="protected-link-container">
+                                        <div class="protected-link-text" id="antiBlockUrl"></div>
+                                        <div class="action-buttons">
+                                            <button class="action-btn copy-btn" data-target="antiBlockUrl">
+                                                <i class="bi bi-clipboard"></i>复制链接
+                                            </button>
+                                            <button class="action-btn open-btn" data-target="antiBlockUrl">
+                                                <i class="bi bi-box-arrow-up-right"></i>打开链接
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -384,7 +413,14 @@
             
             // 绑定按钮事件
             document.addEventListener('click', function(e) {
-                // 复制按钮
+                // 原始链接复制按钮
+                if (e.target.classList.contains('original-copy-btn')) {
+                    const targetId = e.target.getAttribute('data-target');
+                    const text = document.getElementById(targetId).textContent;
+                    copyToClipboard(text);
+                }
+                
+                // 防红和防微信链接的复制按钮
                 if (e.target.closest('.copy-btn')) {
                     const btn = e.target.closest('.copy-btn');
                     const targetId = btn.getAttribute('data-target');
