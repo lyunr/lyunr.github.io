@@ -6,6 +6,7 @@
     <title>高级链接防护系统</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --primary-color: #4361ee;
@@ -21,15 +22,10 @@
             -webkit-text-size-adjust: 100%;
             overflow-x: hidden;
             touch-action: pan-y;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
         
-        .container {
-            flex: 1;
-            padding-top: 2rem;
-            padding-bottom: 2rem;
+        html {
+            overflow-x: hidden;
         }
         
         .card {
@@ -38,11 +34,220 @@
             border: none;
             overflow: hidden;
             transition: transform 0.3s ease;
-            margin-bottom: 1.5rem;
         }
         
-        /* 保持原有的其他CSS样式 */
-        /* ... */
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-weight: 600;
+            border-bottom: none;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .form-control {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .form-control:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .result-box {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .link-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .link-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        
+        .copy-icon {
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 10px;
+        }
+        
+        .copy-icon:hover {
+            transform: scale(1.1);
+            color: var(--primary-color);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .copy-btn {
+            background-color: #e9ecef;
+            color: var(--dark-color);
+            border: 1px solid #dee2e6;
+        }
+        
+        .copy-btn:hover {
+            background-color: #dee2e6;
+            color: var(--dark-color);
+        }
+        
+        .open-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: 1px solid var(--accent-color);
+        }
+        
+        .open-btn:hover {
+            background-color: #3a7bc8;
+            color: white;
+        }
+        
+        .qr-code-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: inline-block;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            width: 100%;
+        }
+        
+        #qrcodeCanvas {
+            margin: 0 auto;
+            -webkit-touch-callout: default;
+            user-select: auto;
+        }
+        
+        #qrcodeCanvas img {
+            display: block;
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            pointer-events: auto;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: rgba(67, 97, 238, 0.05);
+            border-radius: 8px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .switch-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-right: 10px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
@@ -107,141 +312,144 @@
                 </div>
                 
                 <div id="resultsSection" style="display: none;">
-                    <!-- 结果展示区域 -->
-                    <!-- ... -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex align-items-center">
+                            <i class="bi bi-link-45deg me-2" style="font-size: 1.5rem;"></i>
+                            <h4 class="mb-0">生成结果</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h5 class="mb-3"><i class="bi bi-link text-primary me-2"></i>原始链接</h5>
+                                <div class="result-box">
+                                    <div class="link-display">
+                                        <div class="link-text" id="originalUrl"></div>
+                                        <i class="bi bi-clipboard copy-icon" data-target="originalUrl"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4" id="antiRedResultContainer">
+                                <h5 class="mb-3"><i class="bi bi-shield-check text-success me-2"></i>防洪链接</h5>
+                                <div class="result-box">
+                                    <div class="link-display">
+                                        <div class="link-text" id="antiRedUrl"></div>
+                                        <i class="bi bi-clipboard copy-icon" data-target="antiRedUrl"></i>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="action-btn copy-btn" data-target="antiRedUrl">
+                                            <i class="bi bi-clipboard"></i>复制链接
+                                        </button>
+                                        <button class="action-btn open-btn" data-target="antiRedUrl">
+                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5 class="mb-3"><i class="bi bi-wechat text-success me-2"></i>防拦截链接</h5>
+                                <div class="result-box">
+                                    <div class="link-display">
+                                        <div class="link-text" id="antiBlockUrl"></div>
+                                        <i class="bi bi-clipboard copy-icon" data-target="antiBlockUrl"></i>
+                                    </div>
+                                    <div class="action-buttons">
+                                        <button class="action-btn copy-btn" data-target="antiBlockUrl">
+                                            <i class="bi bi-clipboard"></i>复制链接
+                                        </button>
+                                        <button class="action-btn open-btn" data-target="antiBlockUrl">
+                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h5 class="mb-3"><i class="bi bi-qr-code-scan text-info me-2"></i>二维码</h5>
+                                <div class="text-center qr-section">
+                                    <div class="qr-code-container mb-3" id="qrcodeCanvas"></div>
+                                    <p class="text-muted">截图保存或识别</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script>
-    // 确保DOM完全加载后再执行
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('页面加载完成，开始初始化...');
-        
-        // 存储完整URL
-        const fullUrls = {
-            originalUrl: '',
-            antiRedUrl: '',
-            antiBlockUrl: ''
-        };
-        
-        // 预定义卡密（实际使用中应从km.html加载）
-        let validCardKeys = ["TEST1234", "DEMO5678"];
-        
-        // 尝试从km.html加载卡密
-        function loadCardKeys() {
-            console.log('正在加载卡密...');
-            return fetch('km.html')
-                .then(response => {
-                    if (!response.ok) {
-                        console.warn('km.html加载失败，使用默认卡密');
-                        return null;
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    if (!html) return;
-                    
-                    try {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(html, 'text/html');
-                        const cardKeysElement = doc.getElementById('cardKeysData');
-                        
-                        if (cardKeysElement && cardKeysElement.textContent) {
-                            validCardKeys = JSON.parse(cardKeysElement.textContent);
-                            console.log('成功加载卡密:', validCardKeys);
-                        }
-                    } catch (e) {
-                        console.error('卡密解析错误:', e);
-                    }
-                })
-                .catch(error => {
-                    console.error('加载卡密时出错:', error);
-                });
-        }
-        
-        // 从本地存储获取已使用的卡密
-        function getUsedCardKeys() {
-            try {
-                const usedKeys = localStorage.getItem('usedCardKeys');
-                return usedKeys ? JSON.parse(usedKeys) : [];
-            } catch (e) {
-                console.error('读取已使用卡密出错:', e);
-                return [];
-            }
-        }
-        
-        // 存储已使用的卡密到本地
-        function markCardKeyAsUsed(key) {
-            const usedKeys = getUsedCardKeys();
-            if (!usedKeys.includes(key)) {
-                usedKeys.push(key);
-                localStorage.setItem('usedCardKeys', JSON.stringify(usedKeys));
-                console.log('卡密已标记为使用:', key);
-            }
-        }
-        
-        // 验证卡密
-        function validateCardKey(key) {
-            if (!key || key.trim() === '') {
-                return { valid: false, message: "请输入卡密" };
+        document.addEventListener('DOMContentLoaded', function() {
+            // 存储完整URL
+            const fullUrls = {
+                originalUrl: '',
+                antiRedUrl: '',
+                antiBlockUrl: ''
+            };
+            
+            // 预定义卡密
+            let validCardKeys = ["TEST1234", "DEMO5678"];
+            
+            // 从本地存储获取已使用的卡密
+            function getUsedCardKeys() {
+                try {
+                    return JSON.parse(localStorage.getItem('usedCardKeys')) || [];
+                } catch (e) {
+                    return [];
+                }
             }
             
-            if (getUsedCardKeys().includes(key)) {
-                return { valid: false, message: "该卡密已被使用" };
+            // 存储已使用的卡密到本地
+            function markCardKeyAsUsed(key) {
+                const usedKeys = getUsedCardKeys();
+                if (!usedKeys.includes(key)) {
+                    usedKeys.push(key);
+                    localStorage.setItem('usedCardKeys', JSON.stringify(usedKeys));
+                }
             }
             
-            if (validCardKeys.includes(key)) {
-                return { valid: true, message: "卡密验证通过" };
+            // 验证卡密
+            function validateCardKey(key) {
+                if (!key) return { valid: false, message: "请输入卡密" };
+                if (getUsedCardKeys().includes(key)) return { valid: false, message: "该卡密已被使用" };
+                if (validCardKeys.includes(key)) return { valid: true, message: "卡密验证通过" };
+                return { valid: false, message: "无效的卡密" };
             }
             
-            return { valid: false, message: "无效的卡密" };
-        }
-        
-        // 生成随机三位数
-        function generateRandomNumber() {
-            return Math.floor(Math.random() * 900) + 100;
-        }
-        
-        // Base64编码
-        function base64Encode(str) {
-            return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, 
-                function(match, p1) {
-                    return String.fromCharCode('0x' + p1);
-                }));
-        }
-        
-        // 生成防洪链接
-        function generateAntiRedUrl(targetUrl) {
-            const randomNum = generateRandomNumber();
-            const urlWithRandom = targetUrl.includes('?') 
-                ? `${targetUrl}&rnd=${randomNum}`
-                : `${targetUrl}?rnd=${randomNum}`;
-            const base64Url = base64Encode(urlWithRandom);
-            return `http://laicai.66ghz.com/c.htm?c=${base64Url}`;
-        }
-        
-        // 生成防拦截链接
-        function generateAntiBlockUrl(targetUrl) {
-            const currentOrigin = window.location.origin;
-            return `${currentOrigin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
-        }
-        
-        // 生成二维码
-        function generateQRCode(url) {
-            const qrcodeContainer = document.getElementById('qrcodeCanvas');
-            if (!qrcodeContainer) {
-                console.error('二维码容器未找到');
-                return;
+            // 生成随机三位数
+            function generateRandomNumber() {
+                return Math.floor(Math.random() * 900) + 100;
             }
             
-            qrcodeContainer.innerHTML = '';
-            const size = window.innerWidth < 768 ? 150 : 200;
+            // Base64编码
+            function base64Encode(str) {
+                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, 
+                    function(match, p1) {
+                        return String.fromCharCode('0x' + p1);
+                    }));
+            }
             
-            try {
+            // 生成防洪链接
+            function generateAntiRedUrl(targetUrl) {
+                const randomNum = generateRandomNumber();
+                const urlWithRandom = targetUrl.includes('?') 
+                    ? `${targetUrl}&rnd=${randomNum}`
+                    : `${targetUrl}?rnd=${randomNum}`;
+                const base64Url = base64Encode(urlWithRandom);
+                return `http://laicai.66ghz.com/c.htm?c=${base64Url}`;
+            }
+            
+            // 生成防拦截链接
+            function generateAntiBlockUrl(targetUrl) {
+                return `${window.location.origin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
+            }
+            
+            // 生成二维码
+            function generateQRCode(url) {
+                const qrcodeContainer = document.getElementById('qrcodeCanvas');
+                qrcodeContainer.innerHTML = '';
+                const size = window.innerWidth < 768 ? 150 : 200;
                 new QRCode(qrcodeContainer, {
                     text: url,
                     width: size,
@@ -250,57 +458,60 @@
                     colorLight: "#ffffff",
                     correctLevel: QRCode.CorrectLevel.H
                 });
-                console.log('二维码生成成功');
-            } catch (e) {
-                console.error('生成二维码失败:', e);
-            }
-        }
-        
-        // 复制到剪贴板
-        function copyToClipboard(text) {
-            if (!text) {
-                alert('没有可复制的内容');
-                return;
             }
             
-            navigator.clipboard.writeText(text).then(() => {
-                alert('链接已复制到剪贴板');
-            }).catch(err => {
-                console.error('复制失败:', err);
-                // 降级方案
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                alert('链接已复制到剪贴板');
-            });
-        }
-        
-        // 打开链接
-        function openUrl(url) {
-            if (!url) {
-                alert('无效的URL');
-                return;
+            // 复制到剪贴板
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('链接已复制到剪贴板');
+                }).catch(err => {
+                    console.error('复制失败:', err);
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    alert('链接已复制到剪贴板');
+                });
             }
-            window.open(url, '_blank');
-        }
-        
-        // 初始化并设置生成按钮事件
-        loadCardKeys().then(() => {
-            console.log('初始化完成，等待用户操作...');
             
-            document.getElementById('generateBtn').addEventListener('click', function() {
-                console.log('生成按钮被点击');
+            // 打开链接
+            function openUrl(url) {
+                window.open(url, '_blank');
+            }
+            
+            // 绑定按钮事件
+            document.addEventListener('click', function(e) {
+                // 复制图标按钮
+                if (e.target.classList.contains('copy-icon')) {
+                    const targetId = e.target.getAttribute('data-target');
+                    copyToClipboard(fullUrls[targetId]);
+                }
                 
+                // 复制按钮
+                if (e.target.closest('.copy-btn')) {
+                    const btn = e.target.closest('.copy-btn');
+                    const targetId = btn.getAttribute('data-target');
+                    copyToClipboard(fullUrls[targetId]);
+                }
+                
+                // 打开按钮
+                if (e.target.closest('.open-btn')) {
+                    const btn = e.target.closest('.open-btn');
+                    const targetId = btn.getAttribute('data-target');
+                    openUrl(fullUrls[targetId]);
+                }
+            });
+            
+            // 生成按钮点击事件（修正版）
+            document.getElementById('generateBtn').addEventListener('click', function() {
                 // 1. 验证卡密
                 const cardKey = document.getElementById('cardKey').value.trim();
                 const validation = validateCardKey(cardKey);
                 
                 if (!validation.valid) {
                     alert(validation.message);
-                    console.warn('卡密验证失败:', validation.message);
                     return;
                 }
                 
@@ -311,88 +522,66 @@
                     return;
                 }
                 
-                // 验证URL格式
-                let urlObj;
                 try {
-                    urlObj = new URL(targetUrl);
+                    new URL(targetUrl);
                 } catch (e) {
                     alert('请输入有效的URL格式，例如: https://example.com');
-                    return;
-                }
-                
-                if (!['http:', 'https:'].includes(urlObj.protocol)) {
-                    alert('URL必须以http://或https://开头');
                     return;
                 }
                 
                 // 3. 标记卡密为已使用
                 markCardKeyAsUsed(cardKey);
                 
-                // 4. 生成链接
-                console.log('开始生成防护链接...');
-                fullUrls.originalUrl = targetUrl;
-                document.getElementById('originalUrl').textContent = targetUrl;
-                
-                const isAntiRedEnabled = document.getElementById('antiRedSwitch').checked;
-                if (isAntiRedEnabled) {
-                    fullUrls.antiRedUrl = generateAntiRedUrl(targetUrl);
-                    document.getElementById('antiRedUrl').textContent = fullUrls.antiRedUrl;
-                    document.getElementById('antiRedResultContainer').style.display = 'block';
-                } else {
-                    document.getElementById('antiRedResultContainer').style.display = 'none';
+                try {
+                    // 4. 生成链接
+                    fullUrls.originalUrl = targetUrl;
+                    document.getElementById('originalUrl').textContent = targetUrl;
+                    
+                    const isAntiRedEnabled = document.getElementById('antiRedSwitch').checked;
+                    if (isAntiRedEnabled) {
+                        fullUrls.antiRedUrl = generateAntiRedUrl(targetUrl);
+                        document.getElementById('antiRedUrl').textContent = fullUrls.antiRedUrl;
+                        document.getElementById('antiRedResultContainer').style.display = 'block';
+                    } else {
+                        document.getElementById('antiRedResultContainer').style.display = 'none';
+                    }
+                    
+                    const finalUrl = isAntiRedEnabled ? fullUrls.antiRedUrl : targetUrl;
+                    fullUrls.antiBlockUrl = generateAntiBlockUrl(finalUrl);
+                    document.getElementById('antiBlockUrl').textContent = fullUrls.antiBlockUrl;
+                    
+                    generateQRCode(fullUrls.antiBlockUrl);
+                    
+                    // 5. 显示结果
+                    document.getElementById('resultsSection').style.display = 'block';
+                    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+                } catch (error) {
+                    console.error('生成链接出错:', error);
+                    alert('生成链接失败，请重试');
+                    
+                    // 生成失败时移除卡密标记
+                    const usedKeys = getUsedCardKeys();
+                    const index = usedKeys.indexOf(cardKey);
+                    if (index > -1) {
+                        usedKeys.splice(index, 1);
+                        localStorage.setItem('usedCardKeys', JSON.stringify(usedKeys));
+                    }
                 }
-                
-                const finalUrl = isAntiRedEnabled ? fullUrls.antiRedUrl : targetUrl;
-                fullUrls.antiBlockUrl = generateAntiBlockUrl(finalUrl);
-                document.getElementById('antiBlockUrl').textContent = fullUrls.antiBlockUrl;
-                
-                generateQRCode(fullUrls.antiBlockUrl);
-                
-                // 5. 显示结果
-                document.getElementById('resultsSection').style.display = 'block';
-                document.getElementById('resultsSection').scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-                
-                console.log('防护链接生成完成');
             });
-        });
-        
-        // 绑定复制和打开按钮事件
-        document.addEventListener('click', function(e) {
-            // 复制图标按钮
-            if (e.target.classList.contains('copy-icon')) {
-                const targetId = e.target.getAttribute('data-target');
-                if (targetId && fullUrls[targetId]) {
-                    copyToClipboard(fullUrls[targetId]);
-                }
-            }
             
-            // 复制按钮
-            if (e.target.closest('.copy-btn')) {
-                const btn = e.target.closest('.copy-btn');
-                const targetId = btn.getAttribute('data-target');
-                if (targetId && fullUrls[targetId]) {
-                    copyToClipboard(fullUrls[targetId]);
+            // 禁止缩放但允许滚动
+            document.addEventListener('gesturestart', function(e) {
+                if (e.scale !== 1) {
+                    e.preventDefault();
                 }
-            }
+            }, { passive: false });
             
-            // 打开按钮
-            if (e.target.closest('.open-btn')) {
-                const btn = e.target.closest('.open-btn');
-                const targetId = btn.getAttribute('data-target');
-                if (targetId && fullUrls[targetId]) {
-                    openUrl(fullUrls[targetId]);
+            document.addEventListener('touchmove', function(e) {
+                if (e.scale !== 1 && e.scale !== undefined) {
+                    e.preventDefault();
                 }
-            }
+            }, { passive: false });
         });
-        
-        // 添加全局错误处理
-        window.addEventListener('error', function(e) {
-            console.error('全局错误捕获:', e.message, 'at', e.filename, 'line:', e.lineno);
-        });
-    });
     </script>
 </body>
 </html>
