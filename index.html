@@ -264,7 +264,6 @@
             to { transform: rotate(360deg); }
         }
         
-        /* 新增的月卡绑定相关样式 */
         .card-type-switch {
             display: flex;
             align-items: center;
@@ -364,10 +363,6 @@
                         
                         <!-- 月卡绑定区域 -->
                         <div class="bind-section" id="monthCardSection">
-                            <div class="bind-input-group">
-                                <label class="form-label">绑定密码</label>
-                                <input type="password" class="form-control" id="bindPassword" placeholder="设置/输入绑定密码">
-                            </div>
                             <div class="bind-actions">
                                 <button class="btn btn-sm btn-primary" id="bindBtn">绑定设备</button>
                                 <button class="btn btn-sm btn-outline-danger" id="unbindBtn">解绑设备</button>
@@ -381,7 +376,7 @@
                         </button>
                         
                         <div class="mt-3 text-center">
-                            <small class="text-muted">搭建同款系统联系VX：xc277313</small>
+                            <small class="text-muted">搭建同款系统联系VX：666666</small>
                         </div>
                     </div>
                 </div>
@@ -486,21 +481,20 @@
             // 绑定按钮事件
             document.getElementById('bindBtn').addEventListener('click', async function() {
                 const cardKey = document.getElementById('cardKey').value.trim();
-                const password = document.getElementById('bindPassword').value.trim();
+                const deviceId = getDeviceId();
                 
-                if (!cardKey || !password) {
-                    alert('请输入卡密和绑定密码');
+                if (!cardKey) {
+                    alert('请输入卡密');
                     return;
                 }
                 
                 try {
-                    const response = await fetch('https://fftz.huishi.name/bind_device', {
+                    const response = await fetch('https://fftz.huishi.name/api.php?action=bind_device', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
                             key: cardKey,
-                            device_id: getDeviceId(),
-                            password: password
+                            device_id: deviceId
                         })
                     });
                     
@@ -521,31 +515,26 @@
             // 解绑按钮事件
             document.getElementById('unbindBtn').addEventListener('click', async function() {
                 const cardKey = document.getElementById('cardKey').value.trim();
-                const password = document.getElementById('bindPassword').value.trim();
                 
-                if (!cardKey || !password) {
-                    alert('请输入卡密和绑定密码');
+                if (!cardKey) {
+                    alert('请输入卡密');
                     return;
                 }
                 
                 if (!confirm('确定要解绑当前设备吗？')) return;
                 
                 try {
-                    const response = await fetch('https://your-backend-domain.com/api/unbind_device', {
+                    const response = await fetch('https://fftz.huishi.name/api.php?action=unbind_device', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
-                            key: cardKey,
-                            device_id: getDeviceId(),
-                            password: password
+                            key: cardKey
                         })
                     });
                     
                     const data = await response.json();
                     if (data.success) {
                         alert('解绑成功');
-                        document.getElementById('rebindCount').textContent = 
-                            `剩余换绑次数: ${data.rebind_count}次`;
                     } else {
                         alert(data.message || '解绑失败');
                     }
@@ -565,7 +554,7 @@
                 }
                 
                 try {
-                    const response = await fetch('https://your-backend-domain.com/api/validate_key', {
+                    const response = await fetch('https://fftz.huishi.name/api.php?action=validate_key', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
@@ -718,17 +707,25 @@
                     
                     generateQRCode(fullUrls.antiBlockUrl);
                     
-                    // 4. 显示结果
+                    // 4. 记录使用情况
+                    try {
+                        await fetch('https://fftz.huishi.name/api.php?action=record_usage', {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({
+                                key: document.getElementById('cardKey').value.trim(),
+                                device_id: getDeviceId(),
+                                target_url: targetUrl,
+                                generated_url: fullUrls.antiBlockUrl
+                            })
+                        });
+                    } catch (e) {
+                        console.error('记录使用情况失败:', e);
+                    }
+                    
+                    // 5. 显示结果
                     document.getElementById('resultsSection').style.display = 'block';
                     document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
-                    
-                    // 5. 记录使用情况 (实际应用中应调用API)
-                    console.log('记录使用情况:', {
-                        cardKey: document.getElementById('cardKey').value.trim(),
-                        deviceId: getDeviceId(),
-                        targetUrl: targetUrl,
-                        generatedUrl: fullUrls.antiBlockUrl
-                    });
                     
                 } catch (error) {
                     console.error('生成链接出错:', error);
