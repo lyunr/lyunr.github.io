@@ -275,8 +275,8 @@
                         <div class="step">
                             <div class="step-number">2</div>
                             <div>
-                                <h5 class="mb-1">防红保护</h5>
-                                <p class="mb-0 text-muted">开启后可以防止链接变红失效</p>
+                                <h5 class="mb-1">防洪保护</h5>
+                                <p class="mb-0 text-muted">开启后不显示目标链接起到防洪作用</p>
                             </div>
                         </div>
                         
@@ -285,20 +285,28 @@
                                 <input type="checkbox" id="antiRedSwitch" checked>
                                 <span class="slider"></span>
                             </label>
-                            <span>开启防红保护</span>
+                            <span>开启防洪保护</span>
                         </div>
                         
                         <div class="step">
                             <div class="step-number">3</div>
                             <div>
-                                <h5 class="mb-1">生成防护链接</h5>
-                                <p class="mb-0 text-muted">点击下方按钮生成防护链接</p>
+                                <h5 class="mb-1">卡密验证</h5>
+                                <p class="mb-0 text-muted">请输入有效的卡密才能生成链接</p>
                             </div>
                         </div>
                         
+                        <div class="mb-3">
+                            <input type="text" class="form-control" id="cardKey" placeholder="请输入卡密" required>
+                        </div>
+                        
                         <button id="generateBtn" class="btn btn-primary w-100 py-3 fw-bold">
-                            <i class="bi bi-magic me-2"></i>生成防护链接
+                            <i class="bi bi-magic me-2"></i>生成防拦截链接
                         </button>
+                        
+                        <div class="mt-3 text-center">
+                            <small class="text-muted">搭建同款系统联系VX：666666</small>
+                        </div>
                     </div>
                 </div>
                 
@@ -320,7 +328,7 @@
                             </div>
                             
                             <div class="mb-4" id="antiRedResultContainer">
-                                <h5 class="mb-3"><i class="bi bi-shield-check text-success me-2"></i>防红链接</h5>
+                                <h5 class="mb-3"><i class="bi bi-shield-check text-success me-2"></i>防洪链接</h5>
                                 <div class="result-box">
                                     <div class="link-display">
                                         <div class="link-text" id="antiRedUrl"></div>
@@ -338,7 +346,7 @@
                             </div>
                             
                             <div class="mb-4">
-                                <h5 class="mb-3"><i class="bi bi-wechat text-success me-2"></i>防微信拦截链接</h5>
+                                <h5 class="mb-3"><i class="bi bi-wechat text-success me-2"></i>防拦截链接</h5>
                                 <div class="result-box">
                                     <div class="link-display">
                                         <div class="link-text" id="antiBlockUrl"></div>
@@ -359,7 +367,7 @@
                                 <h5 class="mb-3"><i class="bi bi-qr-code-scan text-info me-2"></i>二维码</h5>
                                 <div class="text-center qr-section">
                                     <div class="qr-code-container mb-3" id="qrcodeCanvas"></div>
-                                    <p class="text-muted">长按二维码保存或识别</p>
+                                    <p class="text-muted">截图保存或识别</p>
                                 </div>
                             </div>
                         </div>
@@ -379,6 +387,79 @@
                 antiBlockUrl: ''
             };
             
+            // 从km.html加载卡密
+            let validCardKeys = [];
+            function loadCardKeys() {
+                return fetch('km.html')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('网络响应不正常');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
+                        const cardKeysElement = doc.getElementById('cardKeysData');
+                        if (cardKeysElement) {
+                            try {
+                                validCardKeys = JSON.parse(cardKeysElement.textContent);
+                                console.log('卡密加载成功');
+                            } catch (e) {
+                                console.error('卡密解析失败:', e);
+                                throw new Error('卡密数据格式错误');
+                            }
+                        } else {
+                            throw new Error('未找到卡密数据');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('加载卡密失败:', error);
+                        alert('卡密系统初始化失败，请联系管理员');
+                        // 设置默认卡密（仅用于演示）
+                        validCardKeys = ["DEMO1234", "DEMO5678"];
+                    });
+            }
+            
+            // 从本地存储获取已使用的卡密
+            function getUsedCardKeys() {
+                const usedKeys = localStorage.getItem('usedCardKeys');
+                try {
+                    return usedKeys ? JSON.parse(usedKeys) : [];
+                } catch (e) {
+                    console.error('解析已使用卡密失败:', e);
+                    return [];
+                }
+            }
+            
+            // 存储已使用的卡密到本地
+            function markCardKeyAsUsed(key) {
+                const usedKeys = getUsedCardKeys();
+                if (!usedKeys.includes(key)) {
+                    usedKeys.push(key);
+                    localStorage.setItem('usedCardKeys', JSON.stringify(usedKeys));
+                }
+            }
+            
+            // 验证卡密
+            function validateCardKey(key) {
+                if (!key) {
+                    return { valid: false, message: "请输入卡密" };
+                }
+                
+                // 检查是否已使用
+                if (getUsedCardKeys().includes(key)) {
+                    return { valid: false, message: "该卡密已被使用" };
+                }
+                
+                // 检查是否有效
+                if (validCardKeys.includes(key)) {
+                    return { valid: true, message: "卡密验证通过" };
+                }
+                
+                return { valid: false, message: "无效的卡密" };
+            }
+            
             // 生成随机三位数
             function generateRandomNumber() {
                 return Math.floor(Math.random() * 900) + 100; // 100-999
@@ -389,10 +470,10 @@
                 return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, 
                     function(match, p1) {
                         return String.fromCharCode('0x' + p1);
-                    }));
+                    });
             }
             
-            // 生成防红链接
+            // 生成防洪链接
             function generateAntiRedUrl(targetUrl) {
                 const randomNum = generateRandomNumber();
                 const urlWithRandom = targetUrl.includes('?') 
@@ -402,7 +483,7 @@
                 return `http://laicai.66ghz.com/c.htm?c=${base64Url}`;
             }
             
-            // 生成防微信拦截链接
+            // 生成防拦截链接
             function generateAntiBlockUrl(targetUrl) {
                 return `${window.location.origin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
             }
@@ -470,53 +551,67 @@
                 }
             });
             
-            // 生成按钮点击事件
-            document.getElementById('generateBtn').addEventListener('click', function() {
-                const targetUrl = document.getElementById('targetUrl').value.trim();
-                
-                if (!targetUrl) {
-                    alert('请输入目标链接');
-                    return;
-                }
-                
-                // 更宽松的URL验证
-                if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
-                    alert('请输入有效的URL，必须以http://或https://开头');
-                    return;
-                }
-                
-                try {
-                    new URL(targetUrl);
-                } catch (e) {
-                    alert('请输入有效的URL格式，例如: https://example.com');
-                    return;
-                }
-                
-                // 存储并显示原始链接
-                fullUrls.originalUrl = targetUrl;
-                document.getElementById('originalUrl').textContent = targetUrl;
-                
-                // 生成防红链接
-                const isAntiRedEnabled = document.getElementById('antiRedSwitch').checked;
-                if (isAntiRedEnabled) {
-                    fullUrls.antiRedUrl = generateAntiRedUrl(targetUrl);
-                    document.getElementById('antiRedUrl').textContent = fullUrls.antiRedUrl;
-                    document.getElementById('antiRedResultContainer').style.display = 'block';
-                } else {
-                    document.getElementById('antiRedResultContainer').style.display = 'none';
-                }
-                
-                // 生成防微信拦截链接
-                const finalUrl = isAntiRedEnabled ? fullUrls.antiRedUrl : targetUrl;
-                fullUrls.antiBlockUrl = generateAntiBlockUrl(finalUrl);
-                document.getElementById('antiBlockUrl').textContent = fullUrls.antiBlockUrl;
-                
-                // 生成二维码
-                generateQRCode(fullUrls.antiBlockUrl);
-                
-                // 显示结果区域
-                document.getElementById('resultsSection').style.display = 'block';
-                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            // 初始化并加载卡密
+            loadCardKeys().then(() => {
+                // 生成按钮点击事件
+                document.getElementById('generateBtn').addEventListener('click', function() {
+                    // 先验证卡密
+                    const cardKey = document.getElementById('cardKey').value.trim();
+                    const validation = validateCardKey(cardKey);
+                    if (!validation.valid) {
+                        alert(validation.message);
+                        return;
+                    }
+                    
+                    // 标记卡密为已使用
+                    markCardKeyAsUsed(cardKey);
+                    
+                    // 验证目标链接
+                    const targetUrl = document.getElementById('targetUrl').value.trim();
+                    
+                    if (!targetUrl) {
+                        alert('请输入目标链接');
+                        return;
+                    }
+                    
+                    if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                        alert('请输入有效的URL，必须以http://或https://开头');
+                        return;
+                    }
+                    
+                    try {
+                        new URL(targetUrl);
+                    } catch (e) {
+                        alert('请输入有效的URL格式，例如: https://example.com');
+                        return;
+                    }
+                    
+                    // 存储并显示原始链接
+                    fullUrls.originalUrl = targetUrl;
+                    document.getElementById('originalUrl').textContent = targetUrl;
+                    
+                    // 生成防红链接
+                    const isAntiRedEnabled = document.getElementById('antiRedSwitch').checked;
+                    if (isAntiRedEnabled) {
+                        fullUrls.antiRedUrl = generateAntiRedUrl(targetUrl);
+                        document.getElementById('antiRedUrl').textContent = fullUrls.antiRedUrl;
+                        document.getElementById('antiRedResultContainer').style.display = 'block';
+                    } else {
+                        document.getElementById('antiRedResultContainer').style.display = 'none';
+                    }
+                    
+                    // 生成防微信拦截链接
+                    const finalUrl = isAntiRedEnabled ? fullUrls.antiRedUrl : targetUrl;
+                    fullUrls.antiBlockUrl = generateAntiBlockUrl(finalUrl);
+                    document.getElementById('antiBlockUrl').textContent = fullUrls.antiBlockUrl;
+                    
+                    // 生成二维码
+                    generateQRCode(fullUrls.antiBlockUrl);
+                    
+                    // 显示结果区域
+                    document.getElementById('resultsSection').style.display = 'block';
+                    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+                });
             });
             
             // 禁止缩放但允许滚动
@@ -528,7 +623,6 @@
             
             // 确保触摸事件不会阻止滚动
             document.addEventListener('touchmove', function(e) {
-                // 只阻止缩放，不阻止滚动
                 if (e.scale !== 1 && e.scale !== undefined) {
                     e.preventDefault();
                 }
