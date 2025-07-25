@@ -534,7 +534,7 @@
             return deviceId;
         }
         
-        // 增强版API调用
+        // 增强版API调用（已移除X-Request-ID头）
         async function callAPI(action, data = {}, options = {}) {
             const startTime = Date.now();
             showLoading(true);
@@ -550,8 +550,7 @@
                     mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-API-KEY': API_KEY,
-                        'X-Request-ID': generateRequestId()
+                        'X-API-KEY': API_KEY
                     },
                     body: JSON.stringify(data),
                     signal: controller.signal,
@@ -591,11 +590,6 @@
             } finally {
                 showLoading(false);
             }
-        }
-        
-        // 生成唯一请求ID
-        function generateRequestId() {
-            return 'req-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
         }
         
         // 卡密验证
