@@ -4,16 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>高级链接防护系统</title>
-    <!-- 防止 favicon.ico 404 错误 -->
     <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    
-    <!-- CSS 依赖 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    
-    <!-- JS 依赖 -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    
     <style>
         :root {
             --primary-color: #4361ee;
@@ -306,7 +300,6 @@
             border-color: var(--primary-color);
         }
         
-        /* 新增错误提示样式 */
         #errorToast {
             display: none;
             position: fixed;
@@ -336,10 +329,7 @@
     </style>
 </head>
 <body>
-    <!-- 错误提示容器 -->
     <div id="errorToast"></div>
-    
-    <!-- 加载遮罩 -->
     <div id="loadingOverlay">
         <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
     </div>
@@ -353,7 +343,6 @@
                         <h4 class="mb-0">高级链接防护系统</h4>
                     </div>
                     <div class="card-body">
-                        <!-- 步骤1：输入目标链接 -->
                         <div class="step">
                             <div class="step-number">1</div>
                             <div>
@@ -366,7 +355,6 @@
                             <input type="url" class="form-control" id="targetUrl" placeholder="https://example.com" required>
                         </div>
                         
-                        <!-- 步骤2：防洪保护 -->
                         <div class="step">
                             <div class="step-number">2</div>
                             <div>
@@ -383,7 +371,6 @@
                             <span>开启防洪保护</span>
                         </div>
                         
-                        <!-- 步骤3：卡密验证 -->
                         <div class="step">
                             <div class="step-number">3</div>
                             <div>
@@ -392,7 +379,6 @@
                             </div>
                         </div>
                         
-                        <!-- 卡密类型切换 -->
                         <div class="card-type-switch">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="cardTypeSwitch">
@@ -404,7 +390,6 @@
                             <input type="text" class="form-control" id="cardKey" placeholder="请输入卡密" required>
                         </div>
                         
-                        <!-- 月卡绑定区域 -->
                         <div class="bind-section" id="monthCardSection">
                             <div class="bind-actions">
                                 <button class="btn btn-sm btn-primary" id="bindBtn">绑定设备</button>
@@ -424,7 +409,6 @@
                     </div>
                 </div>
                 
-                <!-- 结果展示区域 -->
                 <div id="resultsSection" style="display: none;">
                     <div class="card mb-4">
                         <div class="card-header d-flex align-items-center">
@@ -492,73 +476,60 @@
         </div>
     </div>
 
-    <!-- JS 依赖 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // 全局配置
         const API_BASE_URL = 'https://fftz.huishi.name/api.php';
-        const API_KEY = 'kytkdJY@HT!JYKM,YU'; // 必须与后端一致
+        const API_KEY = 'kytkdJY@HT!JYKM,YU';
         
-        // 存储完整URL
         const fullUrls = {
             originalUrl: '',
             antiRedUrl: '',
             antiBlockUrl: ''
         };
         
-        // 显示错误提示
         function showError(message, duration = 5000) {
             const toast = document.getElementById('errorToast');
             toast.textContent = message;
             toast.style.display = 'block';
-            
-            setTimeout(() => {
-                toast.style.display = 'none';
-            }, duration);
+            setTimeout(() => { toast.style.display = 'none'; }, duration);
         }
         
-        // 显示加载状态
         function showLoading(show) {
             document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
         }
         
-        // 设备ID生成
         function getDeviceId() {
             let deviceId = localStorage.getItem('deviceId');
             if (!deviceId) {
-                deviceId = 'd-' + Math.random().toString(36).substr(2, 9) + 
-                          '-' + Date.now().toString(36);
+                deviceId = 'd-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now().toString(36);
                 localStorage.setItem('deviceId', deviceId);
             }
             return deviceId;
         }
         
-        // 增强版API调用
-        async function callAPI(action, data = {}, options = {}) {
+        function generateRequestId() {
+            return 'req-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+        }
+        
+        async function callAPI(action, data = {}) {
             const startTime = Date.now();
             showLoading(true);
             
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                const apiUrl = `${API_BASE_URL}?action=${encodeURIComponent(action)}`;
+                console.log('API Request:', apiUrl, data);
                 
-                const response = await fetch(`${API_BASE_URL}?action=${encodeURIComponent(action)}`, {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
-                    mode: 'cors',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-API-KEY': API_KEY,
                         'X-Request-ID': generateRequestId()
                     },
-                    body: JSON.stringify(data),
-                    signal: controller.signal,
-                    ...options
+                    body: JSON.stringify(data)
                 });
                 
-                clearTimeout(timeoutId);
-                
-                // 检查HTTP状态
                 if (!response.ok) {
                     let errorData;
                     try {
@@ -566,7 +537,6 @@
                     } catch (e) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                     }
-                    
                     throw new Error(errorData.message || `请求失败，状态码: ${response.status}`);
                 }
                 
@@ -589,22 +559,16 @@
             }
         }
         
-        // 生成唯一请求ID
-        function generateRequestId() {
-            return 'req-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
-        }
-        
-        // 卡密验证
         async function validateCardKey() {
+            const cardKey = document.getElementById('cardKey').value.trim();
+            const isMonthCard = document.getElementById('cardTypeSwitch').checked;
+            
+            if (!cardKey) {
+                showError('请输入卡密');
+                return { valid: false };
+            }
+            
             try {
-                const cardKey = document.getElementById('cardKey').value.trim();
-                const isMonthCard = document.getElementById('cardTypeSwitch').checked;
-                
-                if (!cardKey) {
-                    showError('请输入卡密');
-                    return { valid: false };
-                }
-                
                 const result = await callAPI('validate_key', {
                     key: cardKey,
                     device_id: getDeviceId(),
@@ -614,70 +578,16 @@
                 if (!result.valid) {
                     showError(result.message || '卡密验证失败');
                 }
-                
                 return result;
             } catch (error) {
                 return { valid: false };
             }
         }
         
-        // 绑定设备
-        async function bindDevice() {
-            try {
-                const cardKey = document.getElementById('cardKey').value.trim();
-                if (!cardKey) {
-                    showError('请输入卡密');
-                    return;
-                }
-                
-                const result = await callAPI('bind_device', {
-                    key: cardKey,
-                    device_id: getDeviceId()
-                });
-                
-                if (result.success) {
-                    document.getElementById('rebindCount').textContent = 
-                        `剩余换绑次数: ${result.rebind_count}次`;
-                    showError('绑定成功', 3000);
-                } else {
-                    showError(result.message || '绑定失败');
-                }
-            } catch (error) {
-                // 错误已处理
-            }
-        }
-        
-        // 解绑设备
-        async function unbindDevice() {
-            try {
-                const cardKey = document.getElementById('cardKey').value.trim();
-                if (!cardKey) {
-                    showError('请输入卡密');
-                    return;
-                }
-                
-                if (!confirm('确定要解绑当前设备吗？')) return;
-                
-                const result = await callAPI('unbind_device', {
-                    key: cardKey
-                });
-                
-                if (result.success) {
-                    showError('解绑成功', 3000);
-                } else {
-                    showError(result.message || '解绑失败');
-                }
-            } catch (error) {
-                // 错误已处理
-            }
-        }
-        
-        // 生成随机三位数
         function generateRandomNumber() {
             return Math.floor(Math.random() * 900) + 100;
         }
         
-        // Base64编码
         function base64Encode(str) {
             return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, 
                 function(match, p1) {
@@ -685,7 +595,6 @@
                 }));
         }
         
-        // 生成防洪链接
         function generateAntiRedUrl(targetUrl) {
             const randomNum = generateRandomNumber();
             const urlWithRandom = targetUrl.includes('?') 
@@ -695,12 +604,10 @@
             return `http://laicai.66ghz.com/c.htm?c=${base64Url}`;
         }
         
-        // 生成防拦截链接
         function generateAntiBlockUrl(targetUrl) {
             return `${window.location.origin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
         }
         
-        // 生成二维码
         function generateQRCode(url) {
             const qrcodeContainer = document.getElementById('qrcodeCanvas');
             qrcodeContainer.innerHTML = '';
@@ -715,7 +622,6 @@
             });
         }
         
-        // 复制到剪贴板
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text).then(() => {
                 showError('链接已复制到剪贴板', 2000);
@@ -731,41 +637,75 @@
             });
         }
         
-        // 打开链接
         function openUrl(url) {
             window.open(url, '_blank');
         }
         
-        // 页面初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 卡密类型切换
-            const cardTypeSwitch = document.getElementById('cardTypeSwitch');
-            const monthCardSection = document.getElementById('monthCardSection');
-            
-            cardTypeSwitch.addEventListener('change', function() {
-                monthCardSection.style.display = this.checked ? 'block' : 'none';
+            document.getElementById('cardTypeSwitch').addEventListener('change', function() {
+                document.getElementById('monthCardSection').style.display = this.checked ? 'block' : 'none';
             });
             
-            // 绑定按钮事件
-            document.getElementById('bindBtn').addEventListener('click', bindDevice);
-            document.getElementById('unbindBtn').addEventListener('click', unbindDevice);
+            document.getElementById('bindBtn').addEventListener('click', async function() {
+                const cardKey = document.getElementById('cardKey').value.trim();
+                if (!cardKey) {
+                    showError('请输入卡密');
+                    return;
+                }
+                
+                try {
+                    const result = await callAPI('bind_device', {
+                        key: cardKey,
+                        device_id: getDeviceId()
+                    });
+                    
+                    if (result.success) {
+                        document.getElementById('rebindCount').textContent = `剩余换绑次数: ${result.rebind_count}次`;
+                        showError('绑定成功', 3000);
+                    } else {
+                        showError(result.message || '绑定失败');
+                    }
+                } catch (error) {
+                    // 错误已处理
+                }
+            });
             
-            // 复制/打开链接事件委托
+            document.getElementById('unbindBtn').addEventListener('click', async function() {
+                const cardKey = document.getElementById('cardKey').value.trim();
+                if (!cardKey) {
+                    showError('请输入卡密');
+                    return;
+                }
+                
+                if (!confirm('确定要解绑当前设备吗？')) return;
+                
+                try {
+                    const result = await callAPI('unbind_device', {
+                        key: cardKey
+                    });
+                    
+                    if (result.success) {
+                        showError('解绑成功', 3000);
+                    } else {
+                        showError(result.message || '解绑失败');
+                    }
+                } catch (error) {
+                    // 错误已处理
+                }
+            });
+            
             document.addEventListener('click', function(e) {
-                // 复制图标按钮
                 if (e.target.classList.contains('copy-icon')) {
                     const targetId = e.target.getAttribute('data-target');
                     copyToClipboard(fullUrls[targetId]);
                 }
                 
-                // 复制按钮
                 if (e.target.closest('.copy-btn')) {
                     const btn = e.target.closest('.copy-btn');
                     const targetId = btn.getAttribute('data-target');
                     copyToClipboard(fullUrls[targetId]);
                 }
                 
-                // 打开按钮
                 if (e.target.closest('.open-btn')) {
                     const btn = e.target.closest('.open-btn');
                     const targetId = btn.getAttribute('data-target');
@@ -773,15 +713,10 @@
                 }
             });
             
-            // 生成按钮点击事件
             document.getElementById('generateBtn').addEventListener('click', async function() {
-                // 1. 验证卡密
                 const validation = await validateCardKey();
-                if (!validation.valid) {
-                    return;
-                }
+                if (!validation.valid) return;
                 
-                // 2. 验证目标URL
                 const targetUrl = document.getElementById('targetUrl').value.trim();
                 if (!targetUrl) {
                     showError('请输入目标链接');
@@ -795,14 +730,12 @@
                     return;
                 }
                 
-                // 显示加载状态
                 const generateBtn = document.getElementById('generateBtn');
                 const generateSpinner = document.getElementById('generateSpinner');
                 generateBtn.disabled = true;
                 generateSpinner.style.display = 'inline-block';
                 
                 try {
-                    // 3. 生成链接
                     fullUrls.originalUrl = targetUrl;
                     document.getElementById('originalUrl').textContent = targetUrl;
                     
@@ -821,7 +754,6 @@
                     
                     generateQRCode(fullUrls.antiBlockUrl);
                     
-                    // 4. 记录使用情况
                     try {
                         await callAPI('record_usage', {
                             key: document.getElementById('cardKey').value.trim(),
@@ -833,7 +765,6 @@
                         console.error('记录使用情况失败:', e);
                     }
                     
-                    // 5. 显示结果
                     document.getElementById('resultsSection').style.display = 'block';
                     document.getElementById('resultsSection').scrollIntoView({ 
                         behavior: 'smooth',
@@ -849,7 +780,6 @@
                 }
             });
             
-            // 禁止缩放但允许滚动
             document.addEventListener('gesturestart', function(e) {
                 if (e.scale !== 1) {
                     e.preventDefault();
