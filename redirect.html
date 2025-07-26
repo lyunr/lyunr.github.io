@@ -3,21 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title></title>
+  <title>安全跳转中...</title>
   <style>
-    body, html {
+    * {
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      height: 100%;
-      background: #000;
-      font-family: Arial, sans-serif;
+      box-sizing: border-box;
     }
-    #proxy-container {
-      position: absolute;
-      width: 100%;
+    body, html {
       height: 100%;
-      border: none;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background-color: #000;
     }
     #loader {
       position: fixed;
@@ -25,43 +22,62 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: #000;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
+      background-color: #000;
       z-index: 1000;
       color: #fff;
-      flex-direction: column;
       transition: opacity 0.5s;
     }
     .spinner {
-      border: 5px solid rgba(255,255,255,0.1);
-      border-top: 5px solid #4285f4;
-      border-radius: 50%;
       width: 50px;
       height: 50px;
+      border: 5px solid rgba(255,255,255,0.1);
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 20px;
     }
     .loading-text {
-      font-size: 16px;
-      color: #aaa;
+      font-size: 18px;
+      margin-bottom: 30px;
+      color: #ecf0f1;
     }
-    #error-message {
+    #error-container {
       display: none;
-      color: #ff6b6b;
-      max-width: 80%;
       text-align: center;
-      margin-top: 20px;
+      max-width: 80%;
+    }
+    .error-title {
+      color: #e74c3c;
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+    .error-message {
+      color: #bdc3c7;
+      margin-bottom: 20px;
     }
     .retry-btn {
-      margin-top: 20px;
       padding: 10px 20px;
-      background: #4285f4;
+      background: #3498db;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    .retry-btn:hover {
+      background: #2980b9;
+    }
+    #content-frame {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
     }
     @keyframes spin {
       to { transform: rotate(360deg); }
@@ -71,22 +87,37 @@
 <body>
   <div id="loader">
     <div class="spinner"></div>
-    <div class="loading-text">正在建立安全通道...</div>
-    <div id="error-message"></div>
-    <button class="retry-btn" onclick="window.location.reload()" style="display:none;">重试</button>
+    <div class="loading-text">正在建立安全连接...</div>
+    <div id="error-container">
+      <h2 class="error-title">发生错误</h2>
+      <p class="error-message" id="error-message"></p>
+      <button class="retry-btn">重新加载</button>
+    </div>
   </div>
 
-  <iframe id="proxy-container" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals"></iframe>
+  <iframe id="content-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
 
   <script>
-    // 增强解码函数
+    // 显示错误
+    function showError(message) {
+      const loader = document.getElementById('loader');
+      const errorContainer = document.getElementById('error-container');
+      const errorMessage = document.getElementById('error-message');
+      const retryBtn = document.querySelector('.retry-btn');
+      
+      errorMessage.textContent = message;
+      errorContainer.style.display = 'block';
+      
+      retryBtn.onclick = function() {
+        window.location.reload();
+      };
+    }
+
+    // 解码URL
     function decodeUrl(encoded) {
       try {
-        const step1 = atob(encoded);
-        const step2 = decodeURIComponent(step1);
-        const step3 = atob(step2);
-        const step4 = decodeURIComponent(step3);
-        const parts = atob(step4).split('||');
+        const decoded = decodeURIComponent(atob(encoded));
+        const parts = decoded.split('||');
         if (parts.length >= 1) {
           return {
             url: parts[0],
@@ -101,16 +132,7 @@
       }
     }
 
-    // 显示错误
-    function showError(msg) {
-      const errorEl = document.getElementById('error-message');
-      const retryBtn = document.querySelector('.retry-btn');
-      errorEl.textContent = msg;
-      errorEl.style.display = 'block';
-      retryBtn.style.display = 'block';
-    }
-
-    // 主初始化函数
+    // 主函数
     function init() {
       const hash = window.location.hash.substring(1);
       if (!hash) {
@@ -120,7 +142,7 @@
       
       const decoded = decodeUrl(hash);
       if (!decoded || !decoded.url) {
-        showError('链接已损坏');
+        showError('链接已损坏或过期');
         return;
       }
       
@@ -130,14 +152,15 @@
         return;
       }
       
-      const frame = document.getElementById('proxy-container');
+      const frame = document.getElementById('content-frame');
       const loader = document.getElementById('loader');
       
-      // 使用中间页技术
+      // 第一步：加载空白页
       frame.src = 'about:blank';
       
       frame.onload = function() {
         try {
+          // 第二步：在iframe中动态创建跳转页面
           const frameDoc = frame.contentDocument || frame.contentWindow.document;
           frameDoc.open();
           frameDoc.write(`
@@ -146,35 +169,30 @@
             <head>
               <title></title>
               <script>
+                // 隐藏父级URL变化
                 try {
-                  // 动态创建iframe实现二次跳转
-                  const innerFrame = document.createElement('iframe');
-                  innerFrame.style.position = 'absolute';
-                  innerFrame.style.width = '100%';
-                  innerFrame.style.height = '100%';
-                  innerFrame.style.border = 'none';
-                  innerFrame.src = '${decoded.url}';
-                  document.body.appendChild(innerFrame);
-                  
-                  // 隐藏地址栏变化
-                  window.addEventListener('beforeunload', function() {
-                    document.body.innerHTML = '<div style="padding:20px;text-align:center;">加载中...</div>';
-                  });
-                } catch(e) {
-                  window.location.href = '${decoded.url}';
-                }
+                  window.parent.document.title = '';
+                } catch(e) {}
+                
+                // 实际跳转
+                window.location.href = '${decoded.url}';
               </script>
             </head>
-            <body></body>
+            <body>
+              <div style="text-align:center;padding:50px;">
+                正在跳转到目标页面...
+              </div>
+            </body>
             </html>
           `);
           frameDoc.close();
           
-          // 淡出加载界面
+          // 隐藏加载界面
           setTimeout(() => {
             loader.style.opacity = '0';
             setTimeout(() => {
               loader.style.display = 'none';
+              frame.style.display = 'block';
             }, 500);
           }, 1000);
           
@@ -184,7 +202,7 @@
         }
       };
       
-      // 超时处理
+      // 设置超时（8秒）
       setTimeout(() => {
         if (frame.contentWindow.location.href === 'about:blank') {
           window.location.href = decoded.url;
