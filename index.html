@@ -1,754 +1,137 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高级链接防护系统</title>
-    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <style>
-        :root {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --accent-color: #4895ef;
-            --light-color: #f8f9fa;
-            --dark-color: #212529;
-        }
-        
-        body {
-            background-color: #f5f7fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            -webkit-text-size-adjust: 100%;
-            overflow-x: hidden;
-            touch-action: pan-y;
-        }
-        
-        html {
-            overflow-x: hidden;
-        }
-        
-        .card {
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            border: none;
-            overflow: hidden;
-            transition: transform 0.3s ease;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .card-header {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-            font-weight: 600;
-            border-bottom: none;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--secondary-color);
-            border-color: var(--secondary-color);
-        }
-        
-        .form-control {
-            border-radius: 8px;
-            padding: 12px 15px;
-            border: 1px solid #e0e0e0;
-        }
-        
-        .form-control:focus {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
-        }
-        
-        .result-box {
-            background-color: white;
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 4px solid var(--accent-color);
-        }
-        
-        .link-display {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .link-text {
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            padding: 8px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-        }
-        
-        .copy-icon {
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-left: 10px;
-        }
-        
-        .copy-icon:hover {
-            transform: scale(1.1);
-            color: var(--primary-color);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .action-btn {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        .copy-btn {
-            background-color: #e9ecef;
-            color: var(--dark-color);
-            border: 1px solid #dee2e6;
-        }
-        
-        .copy-btn:hover {
-            background-color: #dee2e6;
-            color: var(--dark-color);
-        }
-        
-        .open-btn {
-            background-color: var(--accent-color);
-            color: white;
-            border: 1px solid var(--accent-color);
-        }
-        
-        .open-btn:hover {
-            background-color: #3a7bc8;
-            color: white;
-        }
-        
-        .qr-code-container {
-            background-color: white;
-            padding: 15px;
-            border-radius: 10px;
-            display: inline-block;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            text-align: center;
-            width: 100%;
-        }
-        
-        #qrcodeCanvas {
-            margin: 0 auto;
-            -webkit-touch-callout: default;
-            user-select: auto;
-        }
-        
-        #qrcodeCanvas img {
-            display: block;
-            margin: 0 auto;
-            max-width: 100%;
-            height: auto;
-            pointer-events: auto;
-        }
-        
-        .step {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: rgba(67, 97, 238, 0.05);
-            border-radius: 8px;
-        }
-        
-        .step-number {
-            width: 30px;
-            height: 30px;
-            background-color: var(--primary-color);
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 15px;
-            font-weight: bold;
-        }
-        
-        .switch-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-        
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-            margin-right: 10px;
-        }
-        
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 34px;
-        }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        
-        input:checked + .slider {
-            background-color: var(--primary-color);
-        }
-        
-        input:focus + .slider {
-            box-shadow: 0 0 1px var(--primary-color);
-        }
-        
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-        
-        .loading-spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
-            margin-left: 10px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .card-type-switch {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .bind-section {
-            background-color: rgba(67, 97, 238, 0.05);
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 10px;
-            display: none;
-        }
-        
-        .bind-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        
-        .bind-input-group {
-            margin-bottom: 10px;
-        }
-        
-        .rebind-count {
-            font-size: 12px;
-            color: #6c757d;
-            margin-top: 5px;
-        }
-        
-        .form-check-input:checked {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        #errorToast {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #ff4444;
-            color: white;
-            padding: 15px;
-            border-radius: 5px;
-            z-index: 1000;
-            max-width: 400px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        #loadingOverlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 999;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        @media (max-width: 768px) {
-            .card {
-                border-radius: 10px;
-            }
-            
-            .step {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .step-number {
-                margin-bottom: 10px;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-            }
-            
-            .link-text {
-                max-width: 70%;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>内容加载</title>
+  <style>
+    /* 加载动画样式 */
+    .loading-container {
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+    .loading-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+    }
+    .dot-1 { background-color: #ffe386; animation: dot-move 2s ease infinite 0s; }
+    .dot-2 { background-color: #10beae; animation: dot-move 2s ease infinite 0.2s; }
+    .dot-3 { background-color: #f74d75; animation: dot-move 2s ease infinite 0.4s; }
+    
+    @keyframes dot-move {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(0.5); opacity: 0.5; }
+    }
+    
+    /* 内容样式 */
+    .content-frame {
+      height: 100%;
+      width: 100%;
+      position: fixed;
+      left: 0;
+      top: 0;
+      border: none;
+      z-index: 1;
+    }
+  </style>
 </head>
 <body>
-    <div id="errorToast"></div>
-    
-    <div id="loadingOverlay">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
-    </div>
+  <!-- 加载动画 -->
+  <div class="loading-container" id="loading">
+    <div class="loading-dot dot-1"></div>
+    <div class="loading-dot dot-2"></div>
+    <div class="loading-dot dot-3"></div>
+  </div>
 
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-header d-flex align-items-center">
-                        <i class="bi bi-shield-lock me-2" style="font-size: 1.5rem;"></i>
-                        <h4 class="mb-0">高级链接防护系统</h4>
-                    </div>
-                    <div class="card-body">
-                        <div class="step">
-                            <div class="step-number">1</div>
-                            <div>
-                                <h5 class="mb-1">输入目标链接</h5>
-                                <p class="mb-0 text-muted">请输入您需要保护的目标网址</p>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <input type="url" class="form-control" id="targetUrl" placeholder="https://example.com" required>
-                        </div>
-                        
-                        <div class="step">
-                            <div class="step-number">2</div>
-                            <div>
-                                <h5 class="mb-1">防洪保护</h5>
-                                <p class="mb-0 text-muted">开启后不显示目标链接起到防洪作用</p>
-                            </div>
-                        </div>
-                        
-                        <div class="switch-container mb-3">
-                            <label class="switch">
-                                <input type="checkbox" id="antiRedSwitch" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span>开启防洪保护</span>
-                        </div>
-                        
-                        <div class="step">
-                            <div class="step-number">3</div>
-                            <div>
-                                <h5 class="mb-1">卡密验证</h5>
-                                <p class="mb-0 text-muted">请输入有效的卡密才能生成链接</p>
-                            </div>
-                        </div>
-                        
-                        <div class="card-type-switch">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="cardTypeSwitch">
-                                <label class="form-check-label" for="cardTypeSwitch">月卡模式</label>
-                            </div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <input type="text" class="form-control" id="cardKey" placeholder="请输入卡密" required>
-                        </div>
-                        
-                        <div class="bind-section" id="monthCardSection">
-                            <div class="bind-actions">
-                                <button class="btn btn-sm btn-primary" id="bindBtn">绑定设备</button>
-                                <button class="btn btn-sm btn-outline-danger" id="unbindBtn">解绑设备</button>
-                            </div>
-                            <div class="rebind-count" id="rebindCount">剩余换绑次数: 2次</div>
-                        </div>
-                        
-                        <button id="generateBtn" class="btn btn-primary w-100 py-3 fw-bold">
-                            <i class="bi bi-magic me-2"></i>生成防拦截链接
-                            <div class="loading-spinner" id="generateSpinner"></div>
-                        </button>
-                        
-                        <div class="mt-3 text-center">
-                            <small class="text-muted">系统由高级链接防护提供</small>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="resultsSection" style="display: none;">
-                    <div class="card mb-4">
-                        <div class="card-header d-flex align-items-center">
-                            <i class="bi bi-link-45deg me-2" style="font-size: 1.5rem;"></i>
-                            <h4 class="mb-0">生成结果</h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="mb-4">
-                                <h5 class="mb-3"><i class="bi bi-link text-primary me-2"></i>原始链接</h5>
-                                <div class="result-box">
-                                    <div class="link-display">
-                                        <div class="link-text" id="originalUrl"></div>
-                                        <i class="bi bi-clipboard copy-icon" data-target="originalUrl"></i>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-4" id="antiRedResultContainer">
-                                <h5 class="mb-3"><i class="bi bi-shield-check text-success me-2"></i>防洪链接</h5>
-                                <div class="result-box">
-                                    <div class="link-display">
-                                        <div class="link-text" id="antiRedUrl"></div>
-                                        <i class="bi bi-clipboard copy-icon" data-target="antiRedUrl"></i>
-                                    </div>
-                                    <div class="action-buttons">
-                                        <button class="action-btn copy-btn" data-target="antiRedUrl">
-                                            <i class="bi bi-clipboard"></i>复制链接
-                                        </button>
-                                        <button class="action-btn open-btn" data-target="antiRedUrl">
-                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <h5 class="mb-3"><i class="bi bi-wechat text-success me-2"></i>防拦截链接</h5>
-                                <div class="result-box">
-                                    <div class="link-display">
-                                        <div class="link-text" id="antiBlockUrl"></div>
-                                        <i class="bi bi-clipboard copy-icon" data-target="antiBlockUrl"></i>
-                                    </div>
-                                    <div class="action-buttons">
-                                        <button class="action-btn copy-btn" data-target="antiBlockUrl">
-                                            <i class="bi bi-clipboard"></i>复制链接
-                                        </button>
-                                        <button class="action-btn open-btn" data-target="antiBlockUrl">
-                                            <i class="bi bi-box-arrow-up-right"></i>打开链接
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-4">
-                                <h5 class="mb-3"><i class="bi bi-qr-code-scan text-info me-2"></i>二维码</h5>
-                                <div class="text-center qr-section">
-                                    <div class="qr-code-container mb-3" id="qrcodeCanvas"></div>
-                                    <p class="text-muted">截图保存或识别</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+  <!-- 内容容器 -->
+  <iframe class="content-frame" id="contentFrame"></iframe>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script>
-        const API_BASE_URL = 'https://fftz.huishi.name/api.php';  // 替换成你的真实 API 地址
-        const API_KEY = 'a3l0a2RKWUBIVCFKWUtNLFlV';
-        
-        const fullUrls = {
-            originalUrl: '',
-            antiRedUrl: '',
-            antiBlockUrl: ''
-        };
-        
-        function showError(message, duration = 5000) {
-            const toast = document.getElementById('errorToast');
-            toast.textContent = message;
-            toast.style.display = 'block';
-            setTimeout(() => toast.style.display = 'none', duration);
+  <script>
+    // 获取URL参数
+    function getUrlParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    // 加载内容
+    function loadContent(url) {
+      const frame = document.getElementById('contentFrame');
+      frame.src = url;
+      document.getElementById('loading').style.display = 'none';
+      
+      frame.onload = function() {
+        try {
+          bindMouseWheel(frame);
+        } catch(e) {
+          console.log('跨域限制:', e);
         }
-        
-        function showLoading(show) {
-            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+      };
+    }
+
+    // 鼠标滚轮控制
+    function bindMouseWheel(ifr) {
+      const firefox = navigator.userAgent.indexOf('Firefox') != -1;
+      
+      function handleWheel(e, doc) {
+        e.preventDefault();
+        const up = (firefox && e.detail < 0) || e.wheelDelta > 0;
+        doc.body.scrollTop = doc.documentElement.scrollTop += up ? -50 : 50;
+      }
+      
+      try {
+        const doc = ifr.contentWindow.document;
+        if (firefox) {
+          doc.addEventListener('DOMMouseScroll', (e) => handleWheel(e, doc), false);
+        } else {
+          doc.onmousewheel = (e) => handleWheel(e || ifr.contentWindow.event, doc);
         }
-        
-        function getDeviceId() {
-            let deviceId = localStorage.getItem('deviceId');
-            if (!deviceId) {
-                deviceId = 'd-' + Math.random().toString(36).substr(2, 9) + 
-                          '-' + Date.now().toString(36);
-                localStorage.setItem('deviceId', deviceId);
-            }
-            return deviceId;
+      } catch(e) {
+        console.log('跨域无法获取iframe加载document', e);
+      }
+    }
+
+    // 主执行函数
+    function main() {
+      try {
+        const encodedParam = getUrlParam('c');
+        if (!encodedParam) {
+          throw new Error('缺少URL参数(c)');
         }
-        
-        async function callAPI(action, data = {}) {
-            showLoading(true);
-            try {
-                const response = await fetch(`${API_BASE_URL}?action=${encodeURIComponent(action)}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-KEY': API_KEY
-                    },
-                    body: JSON.stringify(data)
-                });
-        
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => null);
-                    throw new Error(errorData?.message || `HTTP ${response.status}`);
-                }
-                return await response.json();
-            } catch (error) {
-                console.error(`API调用失败 (${action}):`, error);
-                showError(`操作失败: ${error.message}`);
-                throw error;
-            } finally {
-                showLoading(false);
-            }
+
+        // 解码Base64 URL
+        let trueUrl;
+        try {
+          trueUrl = atob(encodedParam);
+          if (!trueUrl.startsWith('http')) {
+            throw new Error('无效的URL格式');
+          }
+        } catch (e) {
+          throw new Error('URL解码失败');
         }
-        
-        async function validateCardKey() {
-            try {
-                const result = await callAPI('validate_key', {
-                    key: document.getElementById('cardKey').value.trim(),
-                    device_id: getDeviceId(),
-                    is_month_card: document.getElementById('cardTypeSwitch').checked
-                });
-                
-                if (!result.valid) {
-                    showError(result.message || '卡密验证失败');
-                }
-                return result;
-            } catch (error) {
-                return { valid: false };
-            }
-        }
-        
-        function generateAntiRedUrl(targetUrl) {
-            const randomNum = Math.floor(Math.random() * 900) + 100;
-            const urlWithRandom = targetUrl.includes('?') 
-                ? `${targetUrl}&rnd=${randomNum}`
-                : `${targetUrl}?rnd=${randomNum}`;
-            return `http://laicai.66ghz.com/c.htm?c=${btoa(encodeURIComponent(urlWithRandom))}`;
-        }
-        
-        function generateAntiBlockUrl(targetUrl) {
-            return `${window.location.origin}/fz.html?url=${encodeURIComponent(targetUrl)}`;
-        }
-        
-        function generateQRCode(url) {
-            const qrcodeContainer = document.getElementById('qrcodeCanvas');
-            qrcodeContainer.innerHTML = '';
-            new QRCode(qrcodeContainer, {
-                text: url,
-                width: 200,
-                height: 200,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.H
-            });
-        }
-        
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showError('链接已复制到剪贴板', 2000);
-            }).catch(err => {
-                console.error('复制失败:', err);
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textarea);
-                showError('链接已复制', 2000);
-            });
-        }
-        
-        function openUrl(url) {
-            window.open(url, '_blank');
-        }
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('cardTypeSwitch').addEventListener('change', function() {
-                document.getElementById('monthCardSection').style.display = this.checked ? 'block' : 'none';
-            });
-            
-            document.getElementById('bindBtn').addEventListener('click', async function() {
-                try {
-                    const result = await callAPI('bind_device', {
-                        key: document.getElementById('cardKey').value.trim(),
-                        device_id: getDeviceId()
-                    });
-                    
-                    if (result.success) {
-                        document.getElementById('rebindCount').textContent = 
-                            `剩余换绑次数: ${result.rebind_count}次`;
-                        showError('绑定成功', 3000);
-                    } else {
-                        showError(result.message || '绑定失败');
-                    }
-                } catch (error) {
-                    console.error('绑定失败:', error);
-                }
-            });
-            
-            document.getElementById('unbindBtn').addEventListener('click', async function() {
-                if (!confirm('确定要解绑当前设备吗？')) return;
-                
-                try {
-                    const result = await callAPI('unbind_device', {
-                        key: document.getElementById('cardKey').value.trim()
-                    });
-                    
-                    if (result.success) {
-                        showError('解绑成功', 3000);
-                    } else {
-                        showError(result.message || '解绑失败');
-                    }
-                } catch (error) {
-                    console.error('解绑失败:', error);
-                }
-            });
-            
-            document.addEventListener('click', function(e) {
-                if (e.target.classList.contains('copy-icon') || e.target.closest('.copy-icon')) {
-                    const target = e.target.closest('.copy-icon').getAttribute('data-target');
-                    copyToClipboard(fullUrls[target]);
-                }
-                
-                if (e.target.closest('.copy-btn')) {
-                    const target = e.target.closest('.copy-btn').getAttribute('data-target');
-                    copyToClipboard(fullUrls[target]);
-                }
-                
-                if (e.target.closest('.open-btn')) {
-                    const target = e.target.closest('.open-btn').getAttribute('data-target');
-                    openUrl(fullUrls[target]);
-                }
-            });
-            
-            document.getElementById('generateBtn').addEventListener('click', async function() {
-                const generateBtn = this;
-                const generateSpinner = document.getElementById('generateSpinner');
-                
-                try {
-                    generateBtn.disabled = true;
-                    generateSpinner.style.display = 'inline-block';
-                    
-                    const validation = await validateCardKey();
-                    if (!validation.valid) return;
-                    
-                    const targetUrl = document.getElementById('targetUrl').value.trim();
-                    if (!targetUrl) {
-                        showError('请输入目标链接');
-                        return;
-                    }
-                    
-                    try {
-                        new URL(targetUrl);
-                    } catch {
-                        showError('请输入有效的URL');
-                        return;
-                    }
-                    
-                    fullUrls.originalUrl = targetUrl;
-                    document.getElementById('originalUrl').textContent = targetUrl;
-                    
-                    const isAntiRedEnabled = document.getElementById('antiRedSwitch').checked;
-                    if (isAntiRedEnabled) {
-                        fullUrls.antiRedUrl = generateAntiRedUrl(targetUrl);
-                        document.getElementById('antiRedUrl').textContent = fullUrls.antiRedUrl;
-                        document.getElementById('antiRedResultContainer').style.display = 'block';
-                    } else {
-                        document.getElementById('antiRedResultContainer').style.display = 'none';
-                    }
-                    
-                    const finalUrl = isAntiRedEnabled ? fullUrls.antiRedUrl : targetUrl;
-                    fullUrls.antiBlockUrl = generateAntiBlockUrl(finalUrl);
-                    document.getElementById('antiBlockUrl').textContent = fullUrls.antiBlockUrl;
-                    
-                    generateQRCode(fullUrls.antiBlockUrl);
-                    
-                    await callAPI('record_usage', {
-                        key: document.getElementById('cardKey').value.trim(),
-                        device_id: getDeviceId(),
-                        target_url: targetUrl,
-                        generated_url: fullUrls.antiBlockUrl
-                    });
-                    
-                    document.getElementById('resultsSection').style.display = 'block';
-                    document.getElementById('resultsSection').scrollIntoView({ 
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                    
-                } catch (error) {
-                    console.error('生成出错:', error);
-                } finally {
-                    generateBtn.disabled = false;
-                    generateSpinner.style.display = 'none';
-                }
-            });
-            
-            document.addEventListener('gesturestart', function(e) {
-                if (e.scale !== 1) e.preventDefault();
-            }, { passive: false });
-            
-            document.addEventListener('touchmove', function(e) {
-                if (e.scale !== 1 && e.scale !== undefined) e.preventDefault();
-            }, { passive: false });
-        });
-    </script>
+
+        // 加载内容
+        loadContent(trueUrl);
+      } catch (error) {
+        console.error('初始化失败:', error);
+        document.getElementById('loading').style.display = 'none';
+        document.body.innerHTML = `<div style="text-align:center;padding-top:50px;color:red;">${error.message || '加载失败'}</div>`;
+      }
+    }
+
+    // 页面加载完成后启动
+    window.addEventListener('DOMContentLoaded', main);
+  </script>
 </body>
 </html>
