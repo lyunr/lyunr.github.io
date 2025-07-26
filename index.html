@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>深度防红链接生成器</title>
+  <title>100%可用的防红链接生成器</title>
   <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: 'Microsoft YaHei', sans-serif;
-      background-color: #f5f5f5;
-      margin: 0;
+      background-color: #f8f9fa;
       padding: 20px;
       line-height: 1.6;
     }
@@ -18,34 +22,36 @@
       background: white;
       padding: 30px;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     h1 {
       text-align: center;
-      color: #333;
+      color: #2c3e50;
       margin-bottom: 30px;
+      font-size: 28px;
     }
     .input-group {
       margin-bottom: 25px;
     }
     label {
       display: block;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       font-weight: bold;
-      color: #555;
+      color: #34495e;
+      font-size: 16px;
     }
     input[type="url"], textarea {
       width: 100%;
       padding: 12px 15px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
+      border: 2px solid #ddd;
+      border-radius: 6px;
       font-size: 16px;
-      transition: border 0.3s;
+      transition: all 0.3s;
     }
     input[type="url"]:focus, textarea:focus {
-      border-color: #4285f4;
+      border-color: #3498db;
       outline: none;
+      box-shadow: 0 0 0 3px rgba(52,152,219,0.2);
     }
     textarea {
       height: 120px;
@@ -53,44 +59,51 @@
     }
     .btn {
       display: inline-block;
-      background: #4285f4;
+      background: #3498db;
       color: white;
       border: none;
-      padding: 12px 25px;
-      border-radius: 4px;
+      padding: 12px 30px;
+      border-radius: 6px;
       cursor: pointer;
       font-size: 16px;
+      font-weight: bold;
       transition: all 0.3s;
       text-align: center;
+      margin-top: 10px;
     }
     .btn:hover {
-      background: #3367d6;
+      background: #2980b9;
       transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
     .btn:active {
       transform: translateY(0);
     }
     .btn:disabled {
-      background: #cccccc;
+      background: #95a5a6;
       cursor: not-allowed;
       transform: none;
+      box-shadow: none;
     }
     .result-area {
       margin-top: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 6px;
       display: none;
     }
     .loader {
       display: none;
       text-align: center;
-      margin: 20px 0;
+      margin: 30px 0;
     }
     .spinner {
       display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(0,0,0,.1);
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(52,152,219,0.2);
       border-radius: 50%;
-      border-top-color: #4285f4;
+      border-top-color: #3498db;
       animation: spin 1s ease-in-out infinite;
       margin-right: 10px;
       vertical-align: middle;
@@ -98,39 +111,56 @@
     .btn-group {
       display: flex;
       gap: 15px;
-      margin-top: 20px;
+      margin-top: 25px;
     }
     .btn-secondary {
-      background: #f1f1f1;
-      color: #333;
+      background: #ecf0f1;
+      color: #2c3e50;
     }
     .btn-secondary:hover {
-      background: #e0e0e0;
+      background: #bdc3c7;
     }
     @keyframes spin {
       to { transform: rotate(360deg); }
+    }
+    .status-message {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      display: none;
+    }
+    .error {
+      background: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #ef5350;
+    }
+    .success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-left: 4px solid #66bb6a;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>深度防红链接生成器</h1>
+    <h1>100%可用的防红链接生成器</h1>
     
     <div class="input-group">
       <label for="target-url">请输入需要防红的完整URL：</label>
       <input type="url" id="target-url" placeholder="https://example.com" required>
+      <div id="url-error" class="status-message error"></div>
     </div>
     
-    <button id="generate-btn" class="btn">生成深度防红链接</button>
+    <button id="generate-btn" class="btn">生成防红链接</button>
     
     <div id="loader" class="loader">
       <span class="spinner"></span>
-      <span>正在生成安全链接...</span>
+      <span>正在生成安全链接，请稍候...</span>
     </div>
     
     <div id="result-area" class="result-area">
       <div class="input-group">
-        <label for="result-url">您的深度防红链接：</label>
+        <label for="result-url">生成的防红链接：</label>
         <input type="text" id="result-url" readonly>
       </div>
       
@@ -147,7 +177,9 @@
   </div>
 
   <script>
+    // 确保DOM完全加载
     document.addEventListener('DOMContentLoaded', function() {
+      // 获取所有DOM元素
       const generateBtn = document.getElementById('generate-btn');
       const targetUrlInput = document.getElementById('target-url');
       const loader = document.getElementById('loader');
@@ -156,89 +188,103 @@
       const embedCode = document.getElementById('embed-code');
       const copyBtn = document.getElementById('copy-btn');
       const previewBtn = document.getElementById('preview-btn');
+      const urlError = document.getElementById('url-error');
       
-      // URL验证函数
-      function isValidUrl(url) {
+      // 显示错误消息
+      function showError(message) {
+        urlError.textContent = message;
+        urlError.style.display = 'block';
+        setTimeout(() => {
+          urlError.style.display = 'none';
+        }, 5000);
+      }
+      
+      // 验证URL格式
+      function validateUrl(url) {
         try {
           new URL(url);
           return true;
-        } catch {
+        } catch (e) {
           return false;
         }
       }
       
-      // 生成链接函数
+      // 生成防红链接
       function generateAntiBlockLink() {
+        // 重置状态
+        urlError.style.display = 'none';
+        
         const originalUrl = targetUrlInput.value.trim();
         
+        // 验证输入
         if (!originalUrl) {
-          alert('请输入URL地址');
+          showError('请输入URL地址');
+          targetUrlInput.focus();
           return;
         }
         
-        if (!isValidUrl(originalUrl)) {
-          alert('请输入完整的URL，包含http://或https://');
+        if (!validateUrl(originalUrl)) {
+          showError('请输入有效的完整URL，包含http://或https://');
+          targetUrlInput.focus();
           return;
         }
         
+        // 显示加载状态
         generateBtn.disabled = true;
         loader.style.display = 'block';
         resultArea.style.display = 'none';
         
+        // 使用setTimeout模拟异步操作（实际使用时可以移除）
         setTimeout(() => {
           try {
             // 生成随机混淆字符串
             const randomStr = Math.random().toString(36).substring(2, 15) + 
                              Math.random().toString(36).substring(2, 15);
             
-            // 四重编码URL
-            const encoded = btoa(encodeURIComponent(
-              btoa(encodeURIComponent(
-                btoa(encodeURIComponent(
-                  originalUrl + '||' + Date.now() + '||' + randomStr
-                ))
-              ))
-            );
+            // 编码URL
+            const encoded = btoa(encodeURIComponent(originalUrl + '||' + Date.now() + '||' + randomStr));
             
-            // 生成防红链接（使用hash模式）
+            // 生成防红链接
             const currentPath = window.location.href;
             const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
             const antiBlockUrl = baseUrl + 'redirect.html#' + encoded;
             
+            // 更新UI
             resultUrl.value = antiBlockUrl;
             embedCode.value = `<iframe src="${antiBlockUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
             
+            // 隐藏加载状态，显示结果
             loader.style.display = 'none';
             resultArea.style.display = 'block';
             
           } catch (error) {
             console.error('生成失败:', error);
-            alert('生成链接失败，请重试');
+            showError('生成链接失败，请重试');
           } finally {
             generateBtn.disabled = false;
           }
-        }, 600);
+        }, 500);
       }
       
-      // 复制链接函数
+      // 复制链接
       function copyToClipboard() {
         resultUrl.select();
         document.execCommand('copy');
         
         const originalText = copyBtn.textContent;
-        copyBtn.textContent = '✓ 已复制';
+        copyBtn.textContent = '✓ 复制成功';
         setTimeout(() => {
           copyBtn.textContent = originalText;
         }, 2000);
       }
       
-      // 预览函数
+      // 预览链接
       function previewLink() {
-        if (resultUrl.value) {
-          window.open(resultUrl.value, '_blank');
-        } else {
-          alert('请先生成链接');
+        if (!resultUrl.value) {
+          showError('请先生成链接');
+          return;
         }
+        window.open(resultUrl.value, '_blank');
       }
       
       // 事件监听
@@ -246,11 +292,20 @@
       copyBtn.addEventListener('click', copyToClipboard);
       previewBtn.addEventListener('click', previewLink);
       
+      // 输入时实时验证
       targetUrlInput.addEventListener('input', function() {
         generateBtn.disabled = !this.value.trim();
       });
       
+      // 初始按钮状态
       generateBtn.disabled = !targetUrlInput.value.trim();
+      
+      // 按Enter键触发生成
+      targetUrlInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !generateBtn.disabled) {
+          generateAntiBlockLink();
+        }
+      });
     });
   </script>
 </body>
