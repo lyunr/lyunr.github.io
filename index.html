@@ -533,30 +533,30 @@
         }
         
         async function callAPI(action, data = {}) {
-            showLoading(true);
-            try {
-                const response = await fetch(`${API_BASE_URL}?action=${encodeURIComponent(action)}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-API-KEY': API_KEY
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => null);
-                    throw new Error(errorData?.message || `HTTP ${response.status}`);
-                }
-                return await response.json();
-            } catch (error) {
-                console.error(`API调用失败 (${action}):`, error);
-                showError(`操作失败: ${error.message}`);
-                throw error;
-            } finally {
-                showLoading(false);
-            }
+    showLoading(true);
+    try {
+        const response = await fetch(`${API_BASE_URL}?action=${encodeURIComponent(action)}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-API-KEY': API_KEY
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.message || `HTTP ${response.status}`);
         }
+        return await response.json();
+    } catch (error) {
+        console.error(`API调用失败 (${action}):`, error);
+        showError(`操作失败: ${error.message}`);
+        throw error;
+    } finally {
+        showLoading(false);
+    }
+}
         
         async function validateCardKey() {
             try {
