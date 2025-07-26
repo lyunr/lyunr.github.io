@@ -5,32 +5,149 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>防红链接生成器</title>
   <style>
-    /* 保持原有样式不变 */
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .input-group {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="url"], textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    button {
+      background: #4285f4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background: #3367d6;
+    }
+    .result {
+      margin-top: 30px;
+      display: none;
+    }
+    .loading {
+      text-align: center;
+      margin: 20px 0;
+      display: none;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
   </style>
 </head>
 <body>
-  <!-- 保持原有HTML结构不变 -->
-  
+  <div class="container">
+    <h1>防红链接生成器</h1>
+    
+    <div class="input-group">
+      <label for="url">输入需要防红的URL：</label>
+      <input type="url" id="url" placeholder="https://example.com" required>
+    </div>
+    
+    <button id="generate">生成防红链接</button>
+    
+    <div class="loading" id="loading">
+      正在生成...
+    </div>
+    
+    <div class="result" id="result">
+      <div class="input-group">
+        <label for="result-url">防红链接：</label>
+        <input type="text" id="result-url" readonly>
+      </div>
+      
+      <div class="input-group">
+        <label for="iframe-code">嵌入代码：</label>
+        <textarea id="iframe-code" readonly></textarea>
+      </div>
+      
+      <div class="btn-group">
+        <button id="copy">复制链接</button>
+        <button id="preview">测试链接</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     document.getElementById('generate').addEventListener('click', function() {
       const url = document.getElementById('url').value.trim();
       if (!url) return alert('请输入URL');
       
-      // 三重编码增加安全性
-      const encoded = btoa(encodeURIComponent(btoa(encodeURIComponent(btoa(encodeURIComponent(url))))));
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('result').style.display = 'none';
       
-      // 生成跳转链接
-      const currentPath = window.location.href;
-      const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-      const redirectUrl = baseUrl + 'redirect.html?u=' + encoded;
-      
-      document.getElementById('result-url').value = redirectUrl;
-      document.getElementById('iframe-code').value = `<iframe src="${redirectUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
-      
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('result').style.display = 'block';
+      setTimeout(() => {
+        try {
+          // 三重编码URL
+          const encoded = btoa(encodeURIComponent(btoa(encodeURIComponent(btoa(encodeURIComponent(url))));
+          
+          // 获取当前目录路径
+          const currentPath = window.location.href;
+          const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+          
+          // 生成跳转链接
+          const redirectUrl = baseUrl + 'redirect.html?u=' + encoded;
+          
+          document.getElementById('result-url').value = redirectUrl;
+          document.getElementById('iframe-code').value = 
+            `<iframe src="${redirectUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
+          
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('result').style.display = 'block';
+        } catch (e) {
+          document.getElementById('loading').style.display = 'none';
+          alert('生成失败，请检查URL是否有效');
+          console.error(e);
+        }
+      }, 500);
     });
-    // 其他函数保持不变
+    
+    document.getElementById('copy').addEventListener('click', function() {
+      const input = document.getElementById('result-url');
+      input.select();
+      document.execCommand('copy');
+      alert('已复制到剪贴板');
+    });
+    
+    document.getElementById('preview').addEventListener('click', function() {
+      window.open(document.getElementById('result-url').value, '_blank');
+    });
   </script>
 </body>
 </html>
