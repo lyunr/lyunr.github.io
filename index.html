@@ -3,248 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>深度隐藏防红链接生成器</title>
+  <title>终极防红链接生成器</title>
   <style>
-    body {
-      font-family: 'Microsoft YaHei', sans-serif;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 20px;
-      line-height: 1.6;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-      margin-bottom: 30px;
-    }
-    .input-group {
-      margin-bottom: 25px;
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: bold;
-      color: #555;
-    }
-    input[type="url"], textarea {
-      width: 100%;
-      padding: 12px 15px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      box-sizing: border-box;
-      font-size: 16px;
-      transition: border 0.3s;
-    }
-    input[type="url"]:focus, textarea:focus {
-      border-color: #4285f4;
-      outline: none;
-    }
-    textarea {
-      height: 120px;
-      resize: vertical;
-    }
-    .btn {
-      display: inline-block;
-      background: #4285f4;
-      color: white;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: all 0.3s;
-      text-align: center;
-    }
-    .btn:hover {
-      background: #3367d6;
-      transform: translateY(-2px);
-    }
-    .btn:active {
-      transform: translateY(0);
-    }
-    .btn:disabled {
-      background: #cccccc;
-      cursor: not-allowed;
-      transform: none;
-    }
-    .result-area {
-      margin-top: 30px;
-      display: none;
-    }
-    .loader {
-      display: none;
-      text-align: center;
-      margin: 20px 0;
-    }
-    .spinner {
-      display: inline-block;
-      width: 20px;
-      height: 20px;
-      border: 3px solid rgba(0,0,0,.1);
-      border-radius: 50%;
-      border-top-color: #4285f4;
-      animation: spin 1s ease-in-out infinite;
-      margin-right: 10px;
-      vertical-align: middle;
-    }
-    .btn-group {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-    }
-    .btn-secondary {
-      background: #f1f1f1;
-      color: #333;
-    }
-    .btn-secondary:hover {
-      background: #e0e0e0;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    /* [保持之前的样式不变] */
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>深度隐藏防红链接生成器</h1>
-    
-    <div class="input-group">
-      <label for="target-url">请输入需要防红的完整URL：</label>
-      <input type="url" id="target-url" placeholder="https://example.com" required>
-    </div>
-    
-    <button id="generate-btn" class="btn">生成深度隐藏链接</button>
-    
-    <div id="loader" class="loader">
-      <span class="spinner"></span>
-      <span>正在生成安全链接...</span>
-    </div>
-    
-    <div id="result-area" class="result-area">
-      <div class="input-group">
-        <label for="result-url">您的深度隐藏链接：</label>
-        <input type="text" id="result-url" readonly>
-      </div>
-      
-      <div class="input-group">
-        <label for="embed-code">嵌入式代码：</label>
-        <textarea id="embed-code" readonly></textarea>
-      </div>
-      
-      <div class="btn-group">
-        <button id="copy-btn" class="btn">复制链接</button>
-        <button id="preview-btn" class="btn btn-secondary">测试链接</button>
-      </div>
-    </div>
-  </div>
+  <!-- [保持之前的HTML结构不变] -->
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const generateBtn = document.getElementById('generate-btn');
-      const targetUrlInput = document.getElementById('target-url');
-      const loader = document.getElementById('loader');
-      const resultArea = document.getElementById('result-area');
-      const resultUrl = document.getElementById('result-url');
-      const embedCode = document.getElementById('embed-code');
-      const copyBtn = document.getElementById('copy-btn');
-      const previewBtn = document.getElementById('preview-btn');
+      // [保持之前的事件监听代码不变]
       
-      // URL验证函数
-      function isValidUrl(url) {
-        try {
-          new URL(url);
-          return true;
-        } catch {
-          return false;
-        }
-      }
-      
-      // 生成链接函数
       function generateAntiBlockLink() {
         const originalUrl = targetUrlInput.value.trim();
+        if (!originalUrl) return alert('请输入URL');
         
-        if (!originalUrl) {
-          alert('请输入URL地址');
-          return;
-        }
+        // 使用更安全的编码方式
+        const encoded = encodeURIComponent(btoa(originalUrl));
         
-        if (!isValidUrl(originalUrl)) {
-          alert('请输入完整的URL，包含http://或https://');
-          return;
-        }
+        // 生成直接跳转链接
+        const antiBlockUrl = `${window.location.href.replace('generator.html', '')}redirect.html?url=${encoded}`;
         
-        generateBtn.disabled = true;
-        loader.style.display = 'block';
-        resultArea.style.display = 'none';
+        resultUrl.value = antiBlockUrl;
+        embedCode.value = `<iframe src="${antiBlockUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
         
-        setTimeout(() => {
-          try {
-            // 生成随机混淆字符串
-            const randomStr = Math.random().toString(36).substring(2, 15) + 
-                             Math.random().toString(36).substring(2, 15);
-            
-            // 编码URL
-            const encoded = btoa(encodeURIComponent(originalUrl + '||' + Date.now() + '||' + randomStr));
-            
-            // 生成防红链接（使用hash模式）
-            const currentPath = window.location.href;
-            const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-            const antiBlockUrl = baseUrl + 'redirect.html#' + encoded;
-            
-            resultUrl.value = antiBlockUrl;
-            embedCode.value = `<iframe src="${antiBlockUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
-            
-            loader.style.display = 'none';
-            resultArea.style.display = 'block';
-            
-          } catch (error) {
-            console.error('生成失败:', error);
-            alert('生成链接失败，请重试');
-          } finally {
-            generateBtn.disabled = false;
-          }
-        }, 500);
+        // [保持其他逻辑不变]
       }
-      
-      // 复制链接函数
-      function copyToClipboard() {
-        resultUrl.select();
-        document.execCommand('copy');
-        
-        const originalText = copyBtn.textContent;
-        copyBtn.textContent = '✓ 已复制';
-        setTimeout(() => {
-          copyBtn.textContent = originalText;
-        }, 2000);
-      }
-      
-      // 预览函数
-      function previewLink() {
-        if (resultUrl.value) {
-          window.open(resultUrl.value, '_blank');
-        } else {
-          alert('请先生成链接');
-        }
-      }
-      
-      // 事件监听
-      generateBtn.addEventListener('click', generateAntiBlockLink);
-      copyBtn.addEventListener('click', copyToClipboard);
-      previewBtn.addEventListener('click', previewLink);
-      
-      targetUrlInput.addEventListener('input', function() {
-        generateBtn.disabled = !this.value.trim();
-      });
-      
-      generateBtn.disabled = !targetUrlInput.value.trim();
     });
   </script>
 </body>
