@@ -3,85 +3,96 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>安全跳转中...</title>
+  <title>Loading...</title>
   <style>
-    /* 添加iframe样式 */
-    #hidden-frame {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
+    body, html {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      height: 100%;
     }
-    /* 其他样式保持不变 */
+    #content-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    #loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #f5f5f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div id="loading-content">
-      <h2>安全验证中...</h2>
-      <div class="spinner"></div>
-      <p>正在准备您的内容，请稍候</p>
-    </div>
+  <div id="loader">
+    <div class="spinner"></div>
   </div>
-
-  <!-- 隐藏的iframe用于实际跳转 -->
-  <iframe id="hidden-frame" sandbox="allow-same-origin allow-scripts allow-forms"></iframe>
+  
+  <iframe id="content-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
 
   <script>
-    // 从URL参数获取目标地址
-    const params = new URLSearchParams(window.location.search);
-    const encodedUrl = params.get('u');
-    
-    if (encodedUrl) {
-      try {
-        // 双重解码URL
-        const decoded = decodeURIComponent(atob(decodeURIComponent(atob(encodedUrl))));
-        
-        // 验证URL格式
-        if (!decoded.startsWith('http://') && !decoded.startsWith('https://')) {
-          throw new Error('无效的URL格式');
-        }
-        
-        // 使用隐藏iframe加载目标URL
-        const frame = document.getElementById('hidden-frame');
-        frame.src = decoded;
-        
-        // 监听iframe加载完成
-        frame.onload = function() {
-          // 将iframe内容注入当前页面
-          try {
-            document.body.innerHTML = frame.contentDocument.body.innerHTML;
-            // 修复页面内的相对路径
-            const base = document.createElement('base');
-            base.href = decoded;
-            document.head.appendChild(base);
-          } catch(e) {
-            // 跨域情况下直接跳转
-            window.location.href = decoded;
-          }
-        };
-        
-        // 设置超时处理
-        setTimeout(() => {
-          if (frame.contentWindow.location.href === 'about:blank') {
-            window.location.href = decoded;
-          }
-        }, 3000);
-        
-      } catch (e) {
-        showError('安全验证失败');
-      }
-    } else {
-      showError('缺少必要参数');
+    // 解码URL参数
+    function decodeUrl(encoded) {
+      return decodeURIComponent(atob(decodeURIComponent(atob(decodeURIComponent(atob(encoded))))));
     }
-    
-    function showError(message) {
-      document.getElementById('loading-content').innerHTML = `
-        <h2>加载失败</h2>
-        <p class="error">${message}</p>
-        <a href="javascript:history.back()">返回上一页</a>
-      `;
+
+    // 获取目标URL
+    const params = new URLSearchParams(window.location.search);
+    const targetUrl = params.get('u') ? decodeUrl(params.get('u')) : null;
+
+    if (targetUrl && /^https?:\/\//i.test(targetUrl)) {
+      const frame = document.getElementById('content-frame');
+      
+      // 先尝试iframe加载
+      frame.src = targetUrl;
+      
+      frame.onload = function() {
+        document.getElementById('loader').style.display = 'none';
+        
+        try {
+          // 尝试同源内容替换
+          if (frame.contentDocument && frame.contentDocument.body) {
+            document.body.innerHTML = frame.contentDocument.body.innerHTML;
+            const base = document.createElement('base');
+            base.href = targetUrl;
+            document.head.innerHTML = frame.contentDocument.head.innerHTML;
+            document.head.appendChild(base);
+          }
+        } catch(e) {
+          // 跨域情况下保持iframe显示
+          frame.style.display = 'block';
+        }
+      };
+      
+      // 超时处理
+      setTimeout(() => {
+        if (frame.contentWindow.location.href === 'about:blank') {
+          window.location.href = targetUrl;
+        }
+      }, 3000);
+      
+    } else {
+      document.getElementById('loader').innerHTML = '无效的跳转链接';
+      setTimeout(() => window.close(), 2000);
     }
   </script>
 </body>
