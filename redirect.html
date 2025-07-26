@@ -29,24 +29,31 @@
       align-items: center;
       z-index: 1000;
       background: #f5f5f5;
+      flex-direction: column;
     }
     .spinner {
-      border: 5px solid rgba(0,0,0,0.1);
-      border-top: 5px solid #4285f4;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-top: 3px solid #4285f4;
       border-radius: 50%;
-      width: 50px;
-      height: 50px;
+      width: 30px;
+      height: 30px;
       animation: spin 1s linear infinite;
+      margin-bottom: 15px;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+    .loading-text {
+      color: #666;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <div id="loader">
     <div class="spinner"></div>
+    <div class="loading-text">正在加载内容...</div>
   </div>
   
   <iframe id="content-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
@@ -55,8 +62,14 @@
     // 解码URL（三重解码）
     function decodeUrl(encoded) {
       try {
-        return decodeURIComponent(atob(decodeURIComponent(atob(decodeURIComponent(atob(encoded)))));
+        const step1 = atob(encoded);
+        const step2 = decodeURIComponent(step1);
+        const step3 = atob(step2);
+        const step4 = decodeURIComponent(step3);
+        const step5 = atob(step4);
+        return decodeURIComponent(step5);
       } catch (e) {
+        console.error('解码失败:', e);
         return null;
       }
     }
@@ -78,7 +91,7 @@
         frame.style.display = 'block';
         
         try {
-          // 尝试同源内容替换（完全隐藏iframe）
+          // 尝试同源内容替换
           if (frame.contentDocument && frame.contentDocument.body) {
             document.open();
             document.write(frame.contentDocument.documentElement.outerHTML);
@@ -86,27 +99,20 @@
           }
         } catch(e) {
           // 跨域情况下保持iframe显示
-          console.log('跨域限制，使用iframe展示');
+          console.log('使用iframe展示内容');
         }
       };
       
-      // iframe加载失败处理
-      frame.onerror = function() {
-        loader.style.display = 'none';
-        document.body.innerHTML = '<div style="text-align:center;padding:20px;">加载失败，请<a href="javascript:location.reload()">重试</a></div>';
-      };
-      
-      // 超时处理（5秒）
+      // 超时处理（8秒）
       setTimeout(() => {
         if (frame.contentWindow.location.href === 'about:blank') {
           window.location.href = targetUrl;
         }
-      }, 5000);
+      }, 8000);
       
     } else {
       // 无效URL处理
-      loader.innerHTML = '<div style="text-align:center;padding:20px;">无效的跳转链接</div>';
-      setTimeout(() => window.close(), 3000);
+      loader.innerHTML = '<div style="text-align:center;padding:20px;color:#d32f2f;">无效的跳转链接，请检查链接是否正确</div>';
     }
   </script>
 </body>
