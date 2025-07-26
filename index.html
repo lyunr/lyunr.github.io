@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>防红链接生成器</title>
+  <title>深度隐藏防红链接生成器</title>
   <style>
     body {
       font-family: 'Microsoft YaHei', sans-serif;
       background-color: #f5f5f5;
       margin: 0;
       padding: 20px;
+      line-height: 1.6;
     }
     .container {
       max-width: 800px;
@@ -22,100 +23,141 @@
     h1 {
       text-align: center;
       color: #333;
+      margin-bottom: 30px;
     }
     .input-group {
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
     label {
       display: block;
       margin-bottom: 8px;
       font-weight: bold;
+      color: #555;
     }
     input[type="url"], textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px 15px;
       border: 1px solid #ddd;
       border-radius: 4px;
       box-sizing: border-box;
+      font-size: 16px;
+      transition: border 0.3s;
+    }
+    input[type="url"]:focus, textarea:focus {
+      border-color: #4285f4;
+      outline: none;
     }
     textarea {
-      height: 100px;
+      height: 120px;
       resize: vertical;
     }
-    button {
+    .btn {
+      display: inline-block;
       background: #4285f4;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 12px 25px;
       border-radius: 4px;
       cursor: pointer;
       font-size: 16px;
-      margin-right: 10px;
+      transition: all 0.3s;
+      text-align: center;
     }
-    button:hover {
+    .btn:hover {
       background: #3367d6;
+      transform: translateY(-2px);
     }
-    .result {
+    .btn:active {
+      transform: translateY(0);
+    }
+    .btn:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .result-area {
       margin-top: 30px;
       display: none;
     }
-    .loading {
+    .loader {
+      display: none;
       text-align: center;
       margin: 20px 0;
-      display: none;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0,0,0,.1);
+      border-radius: 50%;
+      border-top-color: #4285f4;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+      vertical-align: middle;
     }
     .btn-group {
       display: flex;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .btn-secondary {
+      background: #f1f1f1;
+      color: #333;
+    }
+    .btn-secondary:hover {
+      background: #e0e0e0;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>防红链接生成器</h1>
+    <h1>深度隐藏防红链接生成器</h1>
     
     <div class="input-group">
-      <label for="url">输入需要防红的URL：</label>
-      <input type="url" id="url" placeholder="https://example.com" required>
+      <label for="target-url">请输入需要防红的完整URL：</label>
+      <input type="url" id="target-url" placeholder="https://example.com" required>
     </div>
     
-    <button id="generate">生成防红链接</button>
+    <button id="generate-btn" class="btn">生成深度隐藏链接</button>
     
-    <div class="loading" id="loading">
-      正在生成...
+    <div id="loader" class="loader">
+      <span class="spinner"></span>
+      <span>正在生成安全链接...</span>
     </div>
     
-    <div class="result" id="result">
+    <div id="result-area" class="result-area">
       <div class="input-group">
-        <label for="result-url">防红链接：</label>
+        <label for="result-url">您的深度隐藏链接：</label>
         <input type="text" id="result-url" readonly>
       </div>
       
       <div class="input-group">
-        <label for="iframe-code">嵌入代码：</label>
-        <textarea id="iframe-code" readonly></textarea>
+        <label for="embed-code">嵌入式代码：</label>
+        <textarea id="embed-code" readonly></textarea>
       </div>
       
       <div class="btn-group">
-        <button id="copy">复制链接</button>
-        <button id="preview">预览</button>
+        <button id="copy-btn" class="btn">复制链接</button>
+        <button id="preview-btn" class="btn btn-secondary">测试链接</button>
       </div>
     </div>
   </div>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const generateBtn = document.getElementById('generate');
-      const urlInput = document.getElementById('url');
-      const loading = document.getElementById('loading');
-      const result = document.getElementById('result');
+      const generateBtn = document.getElementById('generate-btn');
+      const targetUrlInput = document.getElementById('target-url');
+      const loader = document.getElementById('loader');
+      const resultArea = document.getElementById('result-area');
       const resultUrl = document.getElementById('result-url');
-      const iframeCode = document.getElementById('iframe-code');
-      const copyBtn = document.getElementById('copy');
-      const previewBtn = document.getElementById('preview');
+      const embedCode = document.getElementById('embed-code');
+      const copyBtn = document.getElementById('copy-btn');
+      const previewBtn = document.getElementById('preview-btn');
       
-      // 验证URL格式
+      // URL验证函数
       function isValidUrl(url) {
         try {
           new URL(url);
@@ -125,77 +167,84 @@
         }
       }
       
-      // 生成防红链接
-      function generateLink() {
-        const url = urlInput.value.trim();
+      // 生成链接函数
+      function generateAntiBlockLink() {
+        const originalUrl = targetUrlInput.value.trim();
         
-        // 验证输入
-        if (!url) {
+        if (!originalUrl) {
           alert('请输入URL地址');
           return;
         }
         
-        if (!isValidUrl(url)) {
-          alert('请输入有效的URL，包含http://或https://');
+        if (!isValidUrl(originalUrl)) {
+          alert('请输入完整的URL，包含http://或https://');
           return;
         }
         
-        // 显示加载状态
         generateBtn.disabled = true;
-        loading.style.display = 'block';
-        result.style.display = 'none';
+        loader.style.display = 'block';
+        resultArea.style.display = 'none';
         
-        // 生成防红链接
         setTimeout(() => {
           try {
-            // 编码URL
-            const encoded = encodeURIComponent(btoa(url));
+            // 生成随机混淆字符串
+            const randomStr = Math.random().toString(36).substring(2, 15) + 
+                             Math.random().toString(36).substring(2, 15);
             
-            // 获取当前页面路径
+            // 编码URL
+            const encoded = btoa(encodeURIComponent(originalUrl + '||' + Date.now() + '||' + randomStr));
+            
+            // 生成防红链接（使用hash模式）
             const currentPath = window.location.href;
             const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-            const redirectUrl = baseUrl + 'redirect.html?url=' + encoded;
+            const antiBlockUrl = baseUrl + 'redirect.html#' + encoded;
             
-            // 显示结果
-            resultUrl.value = redirectUrl;
-            iframeCode.value = `<iframe src="${redirectUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
+            resultUrl.value = antiBlockUrl;
+            embedCode.value = `<iframe src="${antiBlockUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
             
-            // 隐藏加载状态
-            loading.style.display = 'none';
-            result.style.display = 'block';
+            loader.style.display = 'none';
+            resultArea.style.display = 'block';
             
           } catch (error) {
-            alert('生成失败，请重试');
-            console.error(error);
+            console.error('生成失败:', error);
+            alert('生成链接失败，请重试');
           } finally {
             generateBtn.disabled = false;
           }
         }, 500);
       }
       
-      // 复制链接
-      function copyLink() {
+      // 复制链接函数
+      function copyToClipboard() {
         resultUrl.select();
         document.execCommand('copy');
-        alert('已复制到剪贴板');
+        
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = '✓ 已复制';
+        setTimeout(() => {
+          copyBtn.textContent = originalText;
+        }, 2000);
       }
       
-      // 预览链接
+      // 预览函数
       function previewLink() {
         if (resultUrl.value) {
           window.open(resultUrl.value, '_blank');
+        } else {
+          alert('请先生成链接');
         }
       }
       
-      // 绑定事件
-      generateBtn.addEventListener('click', generateLink);
-      copyBtn.addEventListener('click', copyLink);
+      // 事件监听
+      generateBtn.addEventListener('click', generateAntiBlockLink);
+      copyBtn.addEventListener('click', copyToClipboard);
       previewBtn.addEventListener('click', previewLink);
       
-      // 输入时启用按钮
-      urlInput.addEventListener('input', function() {
+      targetUrlInput.addEventListener('input', function() {
         generateBtn.disabled = !this.value.trim();
       });
+      
+      generateBtn.disabled = !targetUrlInput.value.trim();
     });
   </script>
 </body>
