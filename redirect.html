@@ -3,63 +3,96 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loading...</title>
+  <title>正在跳转...</title>
   <style>
+    /* 基础样式 */
     body, html {
       margin: 0;
       padding: 0;
-      overflow: hidden;
       height: 100%;
-      background: #f5f5f5;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      background-color: #f8f9fa;
     }
+    
+    /* 加载容器 */
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      text-align: center;
+    }
+    
+    /* 加载动画 */
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #4285f4;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    /* 加载文字 */
+    .loading-text {
+      color: #555;
+      font-size: 18px;
+      margin-top: 15px;
+    }
+    
+    /* 错误提示 */
+    .error-message {
+      color: #d32f2f;
+      padding: 20px;
+      max-width: 80%;
+      margin: 0 auto;
+    }
+    
+    /* 重试按钮 */
+    .retry-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    /* 动画定义 */
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* iframe样式 */
     #content-frame {
       width: 100%;
       height: 100%;
       border: none;
       display: none;
     }
-    #loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      background: #f5f5f5;
-      flex-direction: column;
-    }
-    .spinner {
-      border: 3px solid rgba(0,0,0,0.1);
-      border-top: 3px solid #4285f4;
-      border-radius: 50%;
-      width: 30px;
-      height: 30px;
-      animation: spin 1s linear infinite;
-      margin-bottom: 15px;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    .loading-text {
-      color: #666;
-      font-size: 14px;
-    }
   </style>
 </head>
 <body>
-  <div id="loader">
-    <div class="spinner"></div>
-    <div class="loading-text">正在加载内容...</div>
+  <div id="loading" class="loading-container">
+    <div class="loader"></div>
+    <div class="loading-text">正在准备您的内容...</div>
+  </div>
+  
+  <div id="error" class="error-message" style="display:none;">
+    <h2>加载失败</h2>
+    <p id="error-text"></p>
+    <button class="retry-btn" onclick="window.location.reload()">重试</button>
   </div>
   
   <iframe id="content-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
 
   <script>
-    // 解码URL（三重解码）
+    // 解码函数（三重解码）
     function decodeUrl(encoded) {
       try {
         const step1 = atob(encoded);
@@ -69,25 +102,37 @@
         const step5 = atob(step4);
         return decodeURIComponent(step5);
       } catch (e) {
-        console.error('解码失败:', e);
+        console.error('URL解码失败:', e);
         return null;
       }
     }
 
-    // 获取目标URL
-    const params = new URLSearchParams(window.location.search);
-    const encodedParam = params.get('u');
-    const targetUrl = encodedParam ? decodeUrl(encodedParam) : null;
-    const loader = document.getElementById('loader');
-    const frame = document.getElementById('content-frame');
-
-    if (targetUrl && /^https?:\/\//i.test(targetUrl)) {
+    // 主函数
+    function init() {
+      const params = new URLSearchParams(window.location.search);
+      const encodedUrl = params.get('u');
+      const loadingEl = document.getElementById('loading');
+      const errorEl = document.getElementById('error');
+      const frame = document.getElementById('content-frame');
+      
+      if (!encodedUrl) {
+        showError("缺少必要的URL参数");
+        return;
+      }
+      
+      const targetUrl = decodeUrl(encodedUrl);
+      
+      if (!targetUrl || !/^https?:\/\//i.test(targetUrl)) {
+        showError("无效的目标URL");
+        return;
+      }
+      
       // 设置iframe源
       frame.src = targetUrl;
       
       // iframe加载成功处理
       frame.onload = function() {
-        loader.style.display = 'none';
+        loadingEl.style.display = 'none';
         frame.style.display = 'block';
         
         try {
@@ -103,17 +148,28 @@
         }
       };
       
+      // iframe加载失败处理
+      frame.onerror = function() {
+        showError("无法加载目标内容");
+      };
+      
       // 超时处理（8秒）
-      setTimeout(() => {
+      setTimeout(function() {
         if (frame.contentWindow.location.href === 'about:blank') {
           window.location.href = targetUrl;
         }
       }, 8000);
-      
-    } else {
-      // 无效URL处理
-      loader.innerHTML = '<div style="text-align:center;padding:20px;color:#d32f2f;">无效的跳转链接，请检查链接是否正确</div>';
     }
+    
+    // 显示错误函数
+    function showError(message) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error-text').textContent = message;
+    }
+    
+    // 初始化
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
