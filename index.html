@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>防红链接生成器</title>
+  <title>深度防红链接生成器</title>
   <style>
-    /* 基础样式 */
     body {
       font-family: 'Microsoft YaHei', sans-serif;
       background-color: #f5f5f5;
@@ -26,8 +25,6 @@
       color: #333;
       margin-bottom: 30px;
     }
-    
-    /* 输入框样式 */
     .input-group {
       margin-bottom: 25px;
     }
@@ -54,8 +51,6 @@
       height: 120px;
       resize: vertical;
     }
-    
-    /* 按钮样式 */
     .btn {
       display: inline-block;
       background: #4285f4;
@@ -80,14 +75,10 @@
       cursor: not-allowed;
       transform: none;
     }
-    
-    /* 结果区域 */
     .result-area {
       margin-top: 30px;
       display: none;
     }
-    
-    /* 加载动画 */
     .loader {
       display: none;
       text-align: center;
@@ -104,8 +95,6 @@
       margin-right: 10px;
       vertical-align: middle;
     }
-    
-    /* 按钮组 */
     .btn-group {
       display: flex;
       gap: 15px;
@@ -118,8 +107,6 @@
     .btn-secondary:hover {
       background: #e0e0e0;
     }
-    
-    /* 动画定义 */
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -127,42 +114,40 @@
 </head>
 <body>
   <div class="container">
-    <h1>防红链接生成器</h1>
+    <h1>深度防红链接生成器</h1>
     
     <div class="input-group">
-      <label for="target-url">请输入需要防红的URL地址：</label>
+      <label for="target-url">请输入需要防红的完整URL：</label>
       <input type="url" id="target-url" placeholder="https://example.com" required>
     </div>
     
-    <button id="generate-btn" class="btn">生成防红链接</button>
+    <button id="generate-btn" class="btn">生成深度防红链接</button>
     
     <div id="loader" class="loader">
       <span class="spinner"></span>
-      <span>正在生成链接，请稍候...</span>
+      <span>正在生成安全链接...</span>
     </div>
     
     <div id="result-area" class="result-area">
       <div class="input-group">
-        <label for="result-url">您的防红链接：</label>
+        <label for="result-url">您的深度防红链接：</label>
         <input type="text" id="result-url" readonly>
       </div>
       
       <div class="input-group">
-        <label for="embed-code">嵌入代码：</label>
+        <label for="embed-code">嵌入式代码：</label>
         <textarea id="embed-code" readonly></textarea>
       </div>
       
       <div class="btn-group">
         <button id="copy-btn" class="btn">复制链接</button>
-        <button id="preview-btn" class="btn btn-secondary">预览效果</button>
+        <button id="preview-btn" class="btn btn-secondary">测试链接</button>
       </div>
     </div>
   </div>
 
   <script>
-    // 确保DOM完全加载后执行
     document.addEventListener('DOMContentLoaded', function() {
-      // 获取所有需要的元素
       const generateBtn = document.getElementById('generate-btn');
       const targetUrlInput = document.getElementById('target-url');
       const loader = document.getElementById('loader');
@@ -172,56 +157,67 @@
       const copyBtn = document.getElementById('copy-btn');
       const previewBtn = document.getElementById('preview-btn');
       
-      // 生成防红链接函数
+      // URL验证函数
+      function isValidUrl(url) {
+        try {
+          new URL(url);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      
+      // 生成链接函数
       function generateAntiBlockLink() {
-        // 获取并验证URL
         const originalUrl = targetUrlInput.value.trim();
+        
         if (!originalUrl) {
-          alert('请输入有效的URL地址');
+          alert('请输入URL地址');
           return;
         }
         
-        // 验证URL格式
-        try {
-          new URL(originalUrl);
-        } catch (e) {
+        if (!isValidUrl(originalUrl)) {
           alert('请输入完整的URL，包含http://或https://');
           return;
         }
         
-        // 显示加载状态
         generateBtn.disabled = true;
         loader.style.display = 'block';
         resultArea.style.display = 'none';
         
-        // 使用setTimeout模拟异步操作（实际使用时可以移除）
-        setTimeout(function() {
+        setTimeout(() => {
           try {
-            // 三重编码URL
-            const encodedUrl = btoa(encodeURIComponent(btoa(encodeURIComponent(btoa(encodeURIComponent(originalUrl))))));
+            // 生成随机混淆字符串
+            const randomStr = Math.random().toString(36).substring(2, 15) + 
+                             Math.random().toString(36).substring(2, 15);
             
-            // 获取当前页面路径
+            // 四重编码URL
+            const encoded = btoa(encodeURIComponent(
+              btoa(encodeURIComponent(
+                btoa(encodeURIComponent(
+                  originalUrl + '||' + Date.now() + '||' + randomStr
+                ))
+              ))
+            );
+            
+            // 生成防红链接（使用hash模式）
             const currentPath = window.location.href;
             const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+            const antiBlockUrl = baseUrl + 'redirect.html#' + encoded;
             
-            // 生成防红链接
-            const antiBlockUrl = baseUrl + 'redirect.html?u=' + encodedUrl;
-            
-            // 更新UI显示结果
             resultUrl.value = antiBlockUrl;
             embedCode.value = `<iframe src="${antiBlockUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
             
-            // 隐藏加载状态，显示结果
             loader.style.display = 'none';
             resultArea.style.display = 'block';
             
           } catch (error) {
-            console.error('生成链接失败:', error);
-            alert('生成链接失败，请重试或检查URL格式');
+            console.error('生成失败:', error);
+            alert('生成链接失败，请重试');
           } finally {
             generateBtn.disabled = false;
           }
-        }, 500); // 这里设置500ms延迟仅为演示效果
+        }, 600);
       }
       
       // 复制链接函数
@@ -229,7 +225,6 @@
         resultUrl.select();
         document.execCommand('copy');
         
-        // 显示复制成功反馈
         const originalText = copyBtn.textContent;
         copyBtn.textContent = '✓ 已复制';
         setTimeout(() => {
@@ -246,17 +241,15 @@
         }
       }
       
-      // 绑定事件监听器
+      // 事件监听
       generateBtn.addEventListener('click', generateAntiBlockLink);
       copyBtn.addEventListener('click', copyToClipboard);
       previewBtn.addEventListener('click', previewLink);
       
-      // 输入时自动启用按钮
       targetUrlInput.addEventListener('input', function() {
         generateBtn.disabled = !this.value.trim();
       });
       
-      // 初始化按钮状态
       generateBtn.disabled = !targetUrlInput.value.trim();
     });
   </script>
