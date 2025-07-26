@@ -4,36 +4,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>防红链接生成器</title>
-  <!-- 样式保持不变 -->
+  <style>
+    /* 保持原有样式不变 */
+  </style>
 </head>
 <body>
-  <!-- HTML结构保持不变 -->
+  <!-- 保持原有HTML结构不变 -->
   
   <script>
     document.getElementById('generate').addEventListener('click', function() {
       const url = document.getElementById('url').value.trim();
       if (!url) return alert('请输入URL');
       
-      document.getElementById('loading').style.display = 'block';
-      document.getElementById('result').style.display = 'none';
+      // 三重编码增加安全性
+      const encoded = btoa(encodeURIComponent(btoa(encodeURIComponent(btoa(encodeURIComponent(url))))));
       
-      setTimeout(() => {
-        // 编码URL - 使用双重编码增加安全性
-        const encoded = btoa(encodeURIComponent(btoa(encodeURIComponent(url))));
-        
-        // 获取当前目录路径
-        const currentPath = window.location.href;
-        const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-        
-        // 生成跳转链接
-        const redirectUrl = baseUrl + 'redirect.html?u=' + encoded;
-        
-        document.getElementById('result-url').value = redirectUrl;
-        document.getElementById('iframe-code').value = `<iframe src="${redirectUrl}" width="100%" height="500px" frameborder="0"></iframe>`;
-        
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('result').style.display = 'block';
-      }, 500);
+      // 生成跳转链接
+      const currentPath = window.location.href;
+      const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+      const redirectUrl = baseUrl + 'redirect.html?u=' + encoded;
+      
+      document.getElementById('result-url').value = redirectUrl;
+      document.getElementById('iframe-code').value = `<iframe src="${redirectUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
+      
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('result').style.display = 'block';
     });
     // 其他函数保持不变
   </script>
