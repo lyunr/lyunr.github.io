@@ -3,18 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>内容加载</title>
+  <title>防红链接生成器</title>
   <style>
-    /* 加载动画样式 */
+    body {
+      font-family: 'Microsoft YaHei', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    
+    input[type="url"], textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    
+    button {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.3s;
+    }
+    
+    button:hover {
+      background-color: #2980b9;
+    }
+    
+    .result-container {
+      margin-top: 30px;
+      display: none;
+    }
+    
+    .copy-btn {
+      background-color: #2ecc71;
+      margin-left: 10px;
+    }
+    
+    .copy-btn:hover {
+      background-color: #27ae60;
+    }
+    
+    .instructions {
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+    }
+    
+    .instructions h2 {
+      margin-top: 0;
+      color: #2c3e50;
+    }
+    
     .loading-container {
       width: 100px;
       height: 100px;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      z-index: 1000;
+      margin: 20px auto;
+      display: none;
     }
+    
     .loading-dot {
       width: 15px;
       height: 15px;
@@ -26,6 +111,7 @@
       right: 0;
       margin: auto;
     }
+    
     .dot-1 { background-color: #ffe386; animation: dot-move 2s ease infinite 0s; }
     .dot-2 { background-color: #10beae; animation: dot-move 2s ease infinite 0.2s; }
     .dot-3 { background-color: #f74d75; animation: dot-move 2s ease infinite 0.4s; }
@@ -35,103 +121,126 @@
       50% { transform: scale(0.5); opacity: 0.5; }
     }
     
-    /* 内容样式 */
-    .content-frame {
-      height: 100%;
-      width: 100%;
-      position: fixed;
-      left: 0;
-      top: 0;
-      border: none;
-      z-index: 1;
+    .preview-btn {
+      background-color: #9b59b6;
+    }
+    
+    .preview-btn:hover {
+      background-color: #8e44ad;
     }
   </style>
 </head>
 <body>
-  <!-- 加载动画 -->
-  <div class="loading-container" id="loading">
-    <div class="loading-dot dot-1"></div>
-    <div class="loading-dot dot-2"></div>
-    <div class="loading-dot dot-3"></div>
+  <div class="container">
+    <h1>防红链接生成器</h1>
+    
+    <div class="input-group">
+      <label for="originalUrl">输入需要防红的URL：</label>
+      <input type="url" id="originalUrl" placeholder="https://example.com" required>
+    </div>
+    
+    <button id="generateBtn">生成防红链接</button>
+    
+    <div class="loading-container" id="loading">
+      <div class="loading-dot dot-1"></div>
+      <div class="loading-dot dot-2"></div>
+      <div class="loading-dot dot-3"></div>
+    </div>
+    
+    <div class="result-container" id="resultContainer">
+      <div class="input-group">
+        <label for="resultUrl">生成的防红链接：</label>
+        <div style="display: flex;">
+          <input type="text" id="resultUrl" readonly style="flex-grow: 1;">
+          <button class="copy-btn" id="copyBtn">复制</button>
+          <button class="preview-btn" id="previewBtn">预览</button>
+        </div>
+      </div>
+      
+      <div class="input-group">
+        <label for="iframeCode">HTML嵌入代码：</label>
+        <textarea id="iframeCode" readonly></textarea>
+        <button class="copy-btn" id="copyIframeBtn">复制HTML代码</button>
+      </div>
+    </div>
+    
+    <div class="instructions">
+      <h2>使用说明</h2>
+      <ol>
+        <li>在输入框中填入需要防红的URL地址</li>
+        <li>点击"生成防红链接"按钮</li>
+        <li>复制生成的防红链接或HTML代码</li>
+        <li>将链接分享给他人即可实现防红效果</li>
+      </ol>
+      <p><strong>原理说明：</strong>本工具将原始URL进行Base64编码，然后通过iframe加载，避免直接暴露原始URL。</p>
+    </div>
   </div>
 
-  <!-- 内容容器 -->
-  <iframe class="content-frame" id="contentFrame"></iframe>
-
   <script>
-    // 获取URL参数
-    function getUrlParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-    }
-
-    // 加载内容
-    function loadContent(url) {
-      const frame = document.getElementById('contentFrame');
-      frame.src = url;
-      document.getElementById('loading').style.display = 'none';
+    document.addEventListener('DOMContentLoaded', function() {
+      const originalUrl = document.getElementById('originalUrl');
+      const generateBtn = document.getElementById('generateBtn');
+      const resultContainer = document.getElementById('resultContainer');
+      const resultUrl = document.getElementById('resultUrl');
+      const iframeCode = document.getElementById('iframeCode');
+      const copyBtn = document.getElementById('copyBtn');
+      const copyIframeBtn = document.getElementById('copyIframeBtn');
+      const previewBtn = document.getElementById('previewBtn');
+      const loading = document.getElementById('loading');
       
-      frame.onload = function() {
+      // 生成防红链接
+      generateBtn.addEventListener('click', function() {
+        if (!originalUrl.value) {
+          alert('请输入URL地址');
+          return;
+        }
+        
         try {
-          bindMouseWheel(frame);
-        } catch(e) {
-          console.log('跨域限制:', e);
-        }
-      };
-    }
-
-    // 鼠标滚轮控制
-    function bindMouseWheel(ifr) {
-      const firefox = navigator.userAgent.indexOf('Firefox') != -1;
-      
-      function handleWheel(e, doc) {
-        e.preventDefault();
-        const up = (firefox && e.detail < 0) || e.wheelDelta > 0;
-        doc.body.scrollTop = doc.documentElement.scrollTop += up ? -50 : 50;
-      }
-      
-      try {
-        const doc = ifr.contentWindow.document;
-        if (firefox) {
-          doc.addEventListener('DOMMouseScroll', (e) => handleWheel(e, doc), false);
-        } else {
-          doc.onmousewheel = (e) => handleWheel(e || ifr.contentWindow.event, doc);
-        }
-      } catch(e) {
-        console.log('跨域无法获取iframe加载document', e);
-      }
-    }
-
-    // 主执行函数
-    function main() {
-      try {
-        const encodedParam = getUrlParam('c');
-        if (!encodedParam) {
-          throw new Error('缺少URL参数(c)');
-        }
-
-        // 解码Base64 URL
-        let trueUrl;
-        try {
-          trueUrl = atob(encodedParam);
-          if (!trueUrl.startsWith('http')) {
-            throw new Error('无效的URL格式');
-          }
+          // 显示加载动画
+          loading.style.display = 'block';
+          resultContainer.style.display = 'none';
+          
+          // 模拟处理延迟
+          setTimeout(() => {
+            // 编码URL
+            const encodedUrl = btoa(originalUrl.value);
+            const currentPageUrl = window.location.href.split('?')[0];
+            const redirUrl = `${currentPageUrl}?c=${encodedUrl}`;
+            
+            // 显示结果
+            resultUrl.value = redirUrl;
+            iframeCode.value = `<iframe src="${redirUrl}" width="100%" height="500px" frameborder="0"></iframe>`;
+            
+            // 隐藏加载动画，显示结果
+            loading.style.display = 'none';
+            resultContainer.style.display = 'block';
+          }, 800);
         } catch (e) {
-          throw new Error('URL解码失败');
+          loading.style.display = 'none';
+          alert('生成失败，请检查URL是否有效');
+          console.error(e);
         }
-
-        // 加载内容
-        loadContent(trueUrl);
-      } catch (error) {
-        console.error('初始化失败:', error);
-        document.getElementById('loading').style.display = 'none';
-        document.body.innerHTML = `<div style="text-align:center;padding-top:50px;color:red;">${error.message || '加载失败'}</div>`;
-      }
-    }
-
-    // 页面加载完成后启动
-    window.addEventListener('DOMContentLoaded', main);
+      });
+      
+      // 复制防红链接
+      copyBtn.addEventListener('click', function() {
+        resultUrl.select();
+        document.execCommand('copy');
+        alert('链接已复制到剪贴板');
+      });
+      
+      // 复制HTML代码
+      copyIframeBtn.addEventListener('click', function() {
+        iframeCode.select();
+        document.execCommand('copy');
+        alert('HTML代码已复制到剪贴板');
+      });
+      
+      // 预览防红链接
+      previewBtn.addEventListener('click', function() {
+        window.open(resultUrl.value, '_blank');
+      });
+    });
   </script>
 </body>
 </html>
