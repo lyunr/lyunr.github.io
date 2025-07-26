@@ -93,7 +93,7 @@
       </div>
       
       <button id="copy">复制链接</button>
-      <button id="preview">预览</button>
+      <button id="preview">测试链接</button>
     </div>
   </div>
 
@@ -106,12 +106,14 @@
       document.getElementById('result').style.display = 'none';
       
       setTimeout(() => {
-        // 编码URL并生成防红链接
+        // 编码URL
         const encoded = btoa(encodeURIComponent(url));
         
-        // 获取当前页面URL的基础路径
+        // 获取当前目录路径
         const currentPath = window.location.href;
         const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+        
+        // 生成跳转链接（直接指向redirect.html）
         const redirectUrl = baseUrl + 'redirect.html?u=' + encoded;
         
         document.getElementById('result-url').value = redirectUrl;
