@@ -3,215 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>安全跳转中...</title>
+  <title>正在跳转...</title>
   <style>
-    * {
+    body, html {
       margin: 0;
       padding: 0;
-      box-sizing: border-box;
-    }
-    body, html {
       height: 100%;
-      overflow: hidden;
       font-family: Arial, sans-serif;
-      background-color: #000;
-    }
-    #loader {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      background: #f5f5f5;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      background-color: #000;
-      z-index: 1000;
-      color: #fff;
-      transition: opacity 0.5s;
+      text-align: center;
+    }
+    .container {
+      padding: 30px;
+      max-width: 500px;
     }
     .spinner {
-      width: 50px;
-      height: 50px;
-      border: 5px solid rgba(255,255,255,0.1);
+      border: 5px solid #f3f3f3;
       border-top: 5px solid #3498db;
       border-radius: 50%;
+      width: 50px;
+      height: 50px;
       animation: spin 1s linear infinite;
-      margin-bottom: 20px;
+      margin: 0 auto 20px;
     }
-    .loading-text {
-      font-size: 18px;
-      margin-bottom: 30px;
-      color: #ecf0f1;
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-    #error-container {
-      display: none;
-      text-align: center;
-      max-width: 80%;
-    }
-    .error-title {
+    .error {
       color: #e74c3c;
-      margin-bottom: 10px;
-      font-size: 20px;
-    }
-    .error-message {
-      color: #bdc3c7;
-      margin-bottom: 20px;
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 4px;
+      background: #ffebee;
     }
     .retry-btn {
-      padding: 10px 20px;
+      margin-top: 15px;
+      padding: 8px 16px;
       background: #3498db;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 4px;
       cursor: pointer;
-      font-size: 16px;
-      transition: background 0.3s;
-    }
-    .retry-btn:hover {
-      background: #2980b9;
-    }
-    #content-frame {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      border: none;
-      display: none;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-  <div id="loader">
+  <div class="container">
     <div class="spinner"></div>
-    <div class="loading-text">正在建立安全连接...</div>
-    <div id="error-container">
-      <h2 class="error-title">发生错误</h2>
-      <p class="error-message" id="error-message"></p>
-      <button class="retry-btn">重新加载</button>
-    </div>
+    <h2>正在跳转，请稍候...</h2>
+    <div id="error" class="error" style="display:none;"></div>
+    <button id="retry" class="retry-btn" style="display:none;">重试</button>
   </div>
 
-  <iframe id="content-frame" sandbox="allow-same-origin allow-scripts allow-forms allow-popups"></iframe>
-
   <script>
-    // 显示错误
-    function showError(message) {
-      const loader = document.getElementById('loader');
-      const errorContainer = document.getElementById('error-container');
-      const errorMessage = document.getElementById('error-message');
-      const retryBtn = document.querySelector('.retry-btn');
+    document.addEventListener('DOMContentLoaded', function() {
+      const errorEl = document.getElementById('error');
+      const retryBtn = document.getElementById('retry');
       
-      errorMessage.textContent = message;
-      errorContainer.style.display = 'block';
+      // 获取URL参数
+      function getUrlParam(name) {
+        const params = new URLSearchParams(window.location.search);
+        return params.get(name);
+      }
       
-      retryBtn.onclick = function() {
-        window.location.reload();
-      };
-    }
-
-    // 解码URL
-    function decodeUrl(encoded) {
-      try {
-        const decoded = decodeURIComponent(atob(encoded));
-        const parts = decoded.split('||');
-        if (parts.length >= 1) {
-          return {
-            url: parts[0],
-            timestamp: parts[1],
-            random: parts[2]
-          };
+      // 显示错误
+      function showError(message) {
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+        retryBtn.style.display = 'inline-block';
+      }
+      
+      // 主跳转函数
+      function redirect() {
+        const encodedUrl = getUrlParam('url');
+        
+        if (!encodedUrl) {
+          showError('缺少跳转参数');
+          return;
         }
-        return null;
-      } catch(e) {
-        console.error('解码失败:', e);
-        return null;
-      }
-    }
-
-    // 主函数
-    function init() {
-      const hash = window.location.hash.substring(1);
-      if (!hash) {
-        showError('无效的链接参数');
-        return;
-      }
-      
-      const decoded = decodeUrl(hash);
-      if (!decoded || !decoded.url) {
-        showError('链接已损坏或过期');
-        return;
-      }
-      
-      // 验证URL格式
-      if (!/^https?:\/\//i.test(decoded.url)) {
-        showError('不支持的URL协议');
-        return;
-      }
-      
-      const frame = document.getElementById('content-frame');
-      const loader = document.getElementById('loader');
-      
-      // 第一步：加载空白页
-      frame.src = 'about:blank';
-      
-      frame.onload = function() {
+        
+        // 解码URL
+        let targetUrl;
         try {
-          // 第二步：在iframe中动态创建跳转页面
-          const frameDoc = frame.contentDocument || frame.contentWindow.document;
-          frameDoc.open();
-          frameDoc.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <title></title>
-              <script>
-                // 隐藏父级URL变化
-                try {
-                  window.parent.document.title = '';
-                } catch(e) {}
-                
-                // 实际跳转
-                window.location.href = '${decoded.url}';
-              </script>
-            </head>
-            <body>
-              <div style="text-align:center;padding:50px;">
-                正在跳转到目标页面...
-              </div>
-            </body>
-            </html>
-          `);
-          frameDoc.close();
-          
-          // 隐藏加载界面
-          setTimeout(() => {
-            loader.style.opacity = '0';
-            setTimeout(() => {
-              loader.style.display = 'none';
-              frame.style.display = 'block';
-            }, 500);
-          }, 1000);
-          
-        } catch(e) {
-          console.error('跳转失败:', e);
-          window.location.href = decoded.url;
+          targetUrl = atob(decodeURIComponent(encodedUrl));
+        } catch (e) {
+          showError('链接解码失败');
+          return;
         }
-      };
+        
+        // 验证URL
+        if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+          showError('无效的目标URL');
+          return;
+        }
+        
+        // 执行跳转
+        setTimeout(() => {
+          window.location.href = targetUrl;
+        }, 800);
+      }
       
-      // 设置超时（8秒）
-      setTimeout(() => {
-        if (frame.contentWindow.location.href === 'about:blank') {
-          window.location.href = decoded.url;
-        }
-      }, 8000);
-    }
-    
-    // 启动初始化
-    document.addEventListener('DOMContentLoaded', init);
+      // 重试按钮事件
+      retryBtn.addEventListener('click', function() {
+        errorEl.style.display = 'none';
+        retryBtn.style.display = 'none';
+        redirect();
+      });
+      
+      // 初始执行跳转
+      redirect();
+    });
   </script>
 </body>
 </html>
