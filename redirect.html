@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>防红跳转</title>
+  <title>正在跳转...</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      height: 100vh;
       margin: 0;
       background: #f5f5f5;
     }
@@ -21,55 +21,47 @@
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
       text-align: center;
-      max-width: 800px;
+      max-width: 500px;
       width: 90%;
     }
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-    button {
-      background: #4285f4;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    iframe {
-      width: 100%;
-      height: 500px;
-      border: none;
-      margin-top: 20px;
-      display: none;
-    }
     .loading {
-      display: none;
       margin: 20px 0;
     }
-    .url-form {
-      width: 100%;
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #4285f4;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .error {
+      color: #d32f2f;
+      margin-top: 20px;
+    }
+    a {
+      color: #4285f4;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>防红链接跳转</h1>
-    
-    <div class="url-form" id="input-section">
-      <input type="url" id="custom-url" placeholder="在此输入要访问的URL">
-      <button id="go">跳转</button>
+    <div id="loading-content">
+      <h2>正在准备跳转...</h2>
+      <div class="spinner"></div>
+      <p id="countdown">5秒后自动跳转</p>
     </div>
-    
-    <div class="loading" id="loading">
-      正在加载...
+    <div id="error-content" style="display: none;">
+      <h2>跳转失败</h2>
+      <p class="error" id="error-message"></p>
+      <a href="javascript:history.back()">返回上一页</a>
     </div>
-    
-    <iframe id="frame"></iframe>
   </div>
 
   <script>
@@ -77,71 +69,48 @@
     const params = new URLSearchParams(window.location.search);
     const encodedUrl = params.get('u');
     
-    // 页面元素
-    const customUrlInput = document.getElementById('custom-url');
-    const goButton = document.getElementById('go');
-    const frame = document.getElementById('frame');
-    const loading = document.getElementById('loading');
-    const inputSection = document.getElementById('input-section');
+    // 倒计时显示
+    let seconds = 5;
+    const countdownElement = document.getElementById('countdown');
     
-    // 加载URL函数
-    function loadUrl(url) {
-      if (!url) return;
+    const countdownInterval = setInterval(() => {
+      seconds--;
+      countdownElement.textContent = `${seconds}秒后自动跳转`;
       
-      try {
-        // 验证URL
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          throw new Error('URL必须以http://或https://开头');
-        }
-        
-        loading.style.display = 'block';
-        frame.style.display = 'none';
-        inputSection.style.display = 'none';
-        
-        // 设置iframe源
-        frame.src = url;
-        
-        frame.onload = function() {
-          loading.style.display = 'none';
-          frame.style.display = 'block';
-        };
-        
-        frame.onerror = function() {
-          loading.style.display = 'none';
-          inputSection.style.display = 'block';
-          alert('加载页面失败，请检查URL是否正确');
-        };
-        
-      } catch (e) {
-        alert('错误: ' + e.message);
-        loading.style.display = 'none';
-        inputSection.style.display = 'block';
+      if (seconds <= 0) {
+        clearInterval(countdownInterval);
       }
-    }
+    }, 1000);
     
-    // 如果有编码的URL参数，解码并加载
+    // 尝试解码并跳转
     if (encodedUrl) {
       try {
+        // 解码URL
         const decodedUrl = decodeURIComponent(atob(encodedUrl));
-        customUrlInput.value = decodedUrl;
-        loadUrl(decodedUrl);
+        
+        // 验证URL格式
+        if (!decodedUrl.startsWith('http://') && !decodedUrl.startsWith('https://')) {
+          throw new Error('无效的URL格式');
+        }
+        
+        // 3秒后跳转（让用户看到跳转页面）
+        setTimeout(() => {
+          window.location.href = decodedUrl;
+        }, 3000);
+        
       } catch (e) {
-        alert('无效的链接参数');
+        showError(e.message);
       }
+    } else {
+      showError('缺少跳转参数');
     }
     
-    // 手动输入URL跳转
-    goButton.addEventListener('click', function() {
-      const url = customUrlInput.value.trim();
-      loadUrl(url);
-    });
-    
-    // 支持回车键
-    customUrlInput.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        goButton.click();
-      }
-    });
+    function showError(message) {
+      clearInterval(countdownInterval);
+      document.getElementById('loading-content').style.display = 'none';
+      document.getElementById('error-content').style.display = 'block';
+      document.getElementById('error-message').textContent = message;
+    }
   </script>
 </body>
 </html>
