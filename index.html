@@ -33,10 +33,11 @@
     }
     input[type="url"], textarea {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       border: 1px solid #ddd;
       border-radius: 4px;
       box-sizing: border-box;
+      font-size: 16px;
     }
     textarea {
       height: 100px;
@@ -46,14 +47,19 @@
       background: #4285f4;
       color: white;
       border: none;
-      padding: 10px 20px;
+      padding: 12px 24px;
       border-radius: 4px;
       cursor: pointer;
       font-size: 16px;
       margin-right: 10px;
+      transition: background 0.3s;
     }
     button:hover {
       background: #3367d6;
+    }
+    button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
     }
     .result {
       margin-top: 30px;
@@ -80,9 +86,10 @@
       <input type="url" id="url" placeholder="https://example.com" required>
     </div>
     
-    <button id="generate">生成防红链接</button>
+    <button id="generateBtn">生成防红链接</button>
     
     <div class="loading" id="loading">
+      <div style="display:inline-block;width:20px;height:20px;border:3px solid rgba(0,0,0,.3);border-radius:50%;border-top-color:#4285f4;animation:spin 1s ease-in-out infinite;"></div>
       正在生成...
     </div>
     
@@ -98,56 +105,97 @@
       </div>
       
       <div class="btn-group">
-        <button id="copy">复制链接</button>
-        <button id="preview">测试链接</button>
+        <button id="copyBtn">复制链接</button>
+        <button id="previewBtn">测试链接</button>
       </div>
     </div>
   </div>
 
   <script>
-    document.getElementById('generate').addEventListener('click', function() {
-      const url = document.getElementById('url').value.trim();
-      if (!url) return alert('请输入URL');
+    // 修复按钮无法点击的核心解决方案
+    document.addEventListener('DOMContentLoaded', function() {
+      const generateBtn = document.getElementById('generateBtn');
+      const urlInput = document.getElementById('url');
+      const loading = document.getElementById('loading');
+      const result = document.getElementById('result');
+      const resultUrl = document.getElementById('result-url');
+      const iframeCode = document.getElementById('iframe-code');
+      const copyBtn = document.getElementById('copyBtn');
+      const previewBtn = document.getElementById('previewBtn');
       
-      document.getElementById('loading').style.display = 'block';
-      document.getElementById('result').style.display = 'none';
+      // 确保按钮可点击
+      generateBtn.addEventListener('click', generateLink);
+      generateBtn.disabled = false;
       
-      setTimeout(() => {
-        try {
-          // 三重编码URL
-          const encoded = btoa(encodeURIComponent(btoa(encodeURIComponent(btoa(encodeURIComponent(url))));
-          
-          // 获取当前目录路径
-          const currentPath = window.location.href;
-          const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
-          
-          // 生成跳转链接
-          const redirectUrl = baseUrl + 'redirect.html?u=' + encoded;
-          
-          document.getElementById('result-url').value = redirectUrl;
-          document.getElementById('iframe-code').value = 
-            `<iframe src="${redirectUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
-          
-          document.getElementById('loading').style.display = 'none';
-          document.getElementById('result').style.display = 'block';
-        } catch (e) {
-          document.getElementById('loading').style.display = 'none';
-          alert('生成失败，请检查URL是否有效');
-          console.error(e);
+      // 输入时启用按钮
+      urlInput.addEventListener('input', function() {
+        generateBtn.disabled = !this.value.trim();
+      });
+      
+      function generateLink() {
+        const url = urlInput.value.trim();
+        if (!url) {
+          alert('请输入有效的URL地址');
+          return;
         }
-      }, 500);
+        
+        // 显示加载状态
+        generateBtn.disabled = true;
+        loading.style.display = 'block';
+        result.style.display = 'none';
+        
+        // 异步处理避免UI阻塞
+        setTimeout(() => {
+          try {
+            // 三重编码URL
+            const encoded = btoa(encodeURIComponent(btoa(encodeURIComponent(btoa(encodeURIComponent(url))));
+            
+            // 获取当前路径
+            const currentPath = window.location.href;
+            const baseUrl = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+            const redirectUrl = baseUrl + 'redirect.html?u=' + encoded;
+            
+            // 显示结果
+            resultUrl.value = redirectUrl;
+            iframeCode.value = `<iframe src="${redirectUrl}" style="width:100%;height:100vh;border:none;"></iframe>`;
+            
+            // 隐藏加载状态
+            loading.style.display = 'none';
+            result.style.display = 'block';
+            generateBtn.disabled = false;
+            
+          } catch (e) {
+            loading.style.display = 'none';
+            alert('生成失败: ' + e.message);
+            generateBtn.disabled = false;
+            console.error(e);
+          }
+        }, 300);
+      }
+      
+      // 复制功能
+      copyBtn.addEventListener('click', function() {
+        resultUrl.select();
+        document.execCommand('copy');
+        alert('防红链接已复制到剪贴板');
+      });
+      
+      // 预览功能
+      previewBtn.addEventListener('click', function() {
+        if (resultUrl.value) {
+          window.open(resultUrl.value, '_blank');
+        }
+      });
     });
     
-    document.getElementById('copy').addEventListener('click', function() {
-      const input = document.getElementById('result-url');
-      input.select();
-      document.execCommand('copy');
-      alert('已复制到剪贴板');
-    });
-    
-    document.getElementById('preview').addEventListener('click', function() {
-      window.open(document.getElementById('result-url').value, '_blank');
-    });
+    // 加载动画关键帧
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>
