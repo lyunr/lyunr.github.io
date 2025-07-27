@@ -41,12 +41,12 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: none;
+      background: rgba(0,0,0,0.5);
+      display: flex;
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      pointer-events: none;
+      pointer-events: auto;
     }
     
     .watermark-content {
@@ -105,6 +105,17 @@
       margin-top: 15px;
     }
     
+    .interaction-blocker {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 9998;
+      background: transparent;
+      pointer-events: auto;
+    }
+    
     @media (min-width: 768px) {
       .console-warning {
         position: fixed;
@@ -138,6 +149,8 @@
     </div>
   </div>
 
+  <div class="interaction-blocker" id="interactionBlocker"></div>
+
   <div class="console-warning" id="consoleWarning">
     警告：请勿在本演示页进行支付操作！
   </div>
@@ -152,12 +165,10 @@
       return new URLSearchParams(window.location.search).get(name);
     }
 
-    // 修改点：仅移除了?c=前的斜杠（其他所有代码保持不变）
     function getCurrentPageUrl() {
       const url = new URL(window.location.href);
       let pathname = url.pathname;
       
-      // 仅当存在c参数且路径以斜杠结尾时，移除斜杠
       if (url.search.includes('c=') && pathname.endsWith('/')) {
         pathname = pathname.slice(0, -1);
       }
@@ -171,6 +182,8 @@
       expireInfo.textContent = expireTime ? `授权有效期至: ${new Date(expireTime).toLocaleString()}` : '';
       expireInfo.style.display = expireTime ? 'block' : 'none';
       document.getElementById('watermark').style.display = 'flex';
+      document.getElementById('interactionBlocker').style.display = 'block';
+      
       if (!navigator.userAgent.includes('Mobile')) {
         document.getElementById('consoleWarning').style.display = 'block';
       }
@@ -178,6 +191,7 @@
 
     function hideWatermark() {
       document.getElementById('watermark').style.display = 'none';
+      document.getElementById('interactionBlocker').style.display = 'none';
       document.getElementById('consoleWarning').style.display = 'none';
     }
 
@@ -242,12 +256,14 @@
         const encodedParam = getUrlParam('c');
         if (!encodedParam) throw new Error('缺少授权参数(c)');
 
+        // 无论授权状态如何都加载内容
+        loadContent(encodedParam);
+        
         const { authorized, expireTime } = await checkAuth();
         
         if (!authorized) {
           showWatermark('当前页面未授权', expireTime);
         } else {
-          loadContent(encodedParam);
           hideWatermark();
         }
       } catch (error) {
