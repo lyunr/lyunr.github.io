@@ -59,6 +59,13 @@
   <iframe class="content-frame" id="contentFrame"></iframe>
 
   <script>
+    // 备选CORS代理服务器列表（保留但未使用）
+    const CORS_PROXIES = [
+      'https://api.allorigins.win/get?url=',
+      'https://corsproxy.io/?',
+      'https://thingproxy.freeboard.io/fetch/'
+    ];
+
     // 获取URL参数
     function getUrlParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -80,7 +87,7 @@
       };
     }
 
-    // 鼠标滚轮控制
+    // 鼠标滚轮控制（保留功能）
     function bindMouseWheel(ifr) {
       const firefox = navigator.userAgent.indexOf('Firefox') != -1;
       
@@ -102,7 +109,7 @@
       }
     }
 
-    // 主执行函数
+    // 主执行函数（移除了授权检查）
     function main() {
       try {
         const encodedParam = getUrlParam('c');
@@ -121,7 +128,7 @@
           throw new Error('URL解码失败');
         }
 
-        // 加载内容
+        // 直接加载内容（不再检查授权）
         loadContent(trueUrl);
       } catch (error) {
         console.error('初始化失败:', error);
