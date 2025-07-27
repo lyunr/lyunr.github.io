@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>授权验证</title>
+  <title>页面加载</title>
   <style>
     /* 加载动画样式 */
     .loading-container {
@@ -97,16 +97,6 @@
     <div class="loading-dot dot-3"></div>
   </div>
 
-  <!-- 透明水印容器 -->
-  <div class="watermark" id="watermark">
-    <div class="watermark-content">
-      <div>当前页面未授权</div>
-      <div>请联系 RS112900 获取授权</div>
-      <div class="error-message" id="errorDetail"></div>
-      <a href="javascript:location.reload()">点击刷新验证</a>
-    </div>
-  </div>
-
   <!-- 内容容器 -->
   <iframe class="content-frame" id="contentFrame"></iframe>
 
@@ -115,19 +105,6 @@
     function getUrlParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
-    }
-
-    // 显示水印
-    function showWatermark(errorMessage = '') {
-      if (errorMessage) {
-        document.getElementById('errorDetail').textContent = errorMessage;
-      }
-      document.getElementById('watermark').style.display = 'flex';
-    }
-
-    // 隐藏水印
-    function hideWatermark() {
-      document.getElementById('watermark').style.display = 'none';
     }
 
     // 加载内容
@@ -186,7 +163,7 @@
           throw new Error('URL解码失败');
         }
 
-        // 加载内容
+        // 直接加载内容
         loadContent(trueUrl);
         hideWatermark();
       } catch (error) {
