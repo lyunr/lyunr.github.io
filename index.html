@@ -152,8 +152,20 @@
       return new URLSearchParams(window.location.search).get(name);
     }
 
+    // 修正的URL构建函数（确保?c=前没有斜杠）
     function getCurrentPageUrl() {
-      return window.location.origin + window.location.pathname + window.location.search;
+      let url = window.location.origin;
+      // 处理路径部分（确保不以斜杠结尾）
+      let path = window.location.pathname;
+      if (path.endsWith('/') && path !== '/') {
+        path = path.slice(0, -1);
+      }
+      url += path;
+      // 添加查询参数
+      if (window.location.search) {
+        url += window.location.search;
+      }
+      return url;
     }
 
     function showWatermark(errorMessage = '', expireTime = null) {
@@ -180,8 +192,8 @@
 
       try {
         const currentPageUrl = getCurrentPageUrl();
-        const apiUrl = `${AUTH_API_URL}?link=${currentPageUrl}`;
-        console.log('[验证] 当前页面URL:', currentPageUrl);
+        const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(currentPageUrl)}`;
+        console.log('[验证] 修正后的页面URL:', currentPageUrl);
         console.log('[请求] 授权验证API:', apiUrl);
         
         const response = await fetch(apiUrl, {
@@ -248,6 +260,7 @@
       }
     }
 
+    // 每小时检查一次授权状态
     setInterval(async () => {
       if (!DEBUG_MODE && document.getElementById('watermark').style.display === 'none') {
         const { authorized, expireTime } = await checkAuth();
@@ -255,12 +268,14 @@
       }
     }, 3600000);
 
+    // 防止右键菜单（仅在水印显示时）
     document.addEventListener('contextmenu', (e) => {
       if (document.getElementById('watermark').style.display === 'flex') {
         e.preventDefault();
       }
     });
 
+    // 控制台检测（非调试模式时）
     if (!DEBUG_MODE) {
       setInterval(() => {
         if (window.console?.firebug) {
