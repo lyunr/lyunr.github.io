@@ -144,10 +144,7 @@
     </div>
   </div>
 
-  <!-- 控制台警告 -->
-  <div class="console-warning" id="consoleWarning">
-    警告：请勿在控制台尝试任何操作，所有行为已被记录！
-  </div>
+
 
   <!-- 内容容器 -->
   <iframe class="content-frame" id="contentFrame"></iframe>
@@ -369,14 +366,7 @@
       }
     });
 
-    // 控制台检测
-    if (!DEBUG_MODE) {
-      setInterval(function() {
-        if (window.console && window.console.firebug) {
-          showWatermark('检测到非法调试工具使用');
-        }
-      }, 1000);
-    }
+  
   </script>
 </body>
 </html>
