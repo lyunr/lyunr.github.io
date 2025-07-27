@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>授权验证</title>
+  <link rel="icon" href="data:,"> <!-- 防止favicon.ico请求 -->
   <style>
     /* 加载动画样式 */
     .loading-container {
@@ -146,11 +147,11 @@
 
   <!-- 控制台警告 -->
   <div class="console-warning" id="consoleWarning">
-    警告：请勿在演示页支付操作！
+    警告：请勿在控制台尝试任何操作，所有行为已被记录！
   </div>
 
   <!-- 内容容器 -->
-  <iframe class="content-frame" id="contentFrame"></iframe>
+  <iframe class="content-frame" id="contentFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
 
   <script>
     // 配置授权检查API地址
@@ -175,13 +176,14 @@
 
       try {
         // 获取当前页面完整URL（包含参数）
-        const currentPageUrl = window.location.href.split('#')[0]; // 去除hash部分
-        const apiUrl = AUTH_API_URL + '?link=' + currentPageUrl;
+        const currentPageUrl = window.location.origin + window.location.pathname + window.location.search;
+        const apiUrl = AUTH_API_URL + '?link=' + encodeURIComponent(currentPageUrl);
         console.log('[请求] 正在验证授权:', apiUrl);
         
         const response = await fetch(apiUrl, {
           method: 'GET',
-          headers: { 'Accept': 'application/json' }
+          headers: { 'Accept': 'application/json' },
+          mode: 'cors' // 明确指定CORS模式
         });
         
         if (!response.ok) {
@@ -199,6 +201,7 @@
         return { authorized: false, expireTime: null };
       }
     }
+
     // 显示水印
     function showWatermark(errorMessage = '', expireTime = null) {
       const watermark = document.getElementById('watermark');
@@ -230,8 +233,15 @@
     // 加载内容
     function loadContent(url) {
       const frame = document.getElementById('contentFrame');
-      frame.src = url;
+      // 确保加载的URL是HTTPS
+      const secureUrl = url.replace(/^http:/, 'https:');
+      frame.src = secureUrl;
       document.getElementById('loading').style.display = 'none';
+      
+      // 处理iframe加载错误
+      frame.onerror = function() {
+        showWatermark('内容加载失败，请检查URL是否正确');
+      };
     }
 
     // 主执行函数
