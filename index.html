@@ -153,7 +153,7 @@
   <iframe class="content-frame" id="contentFrame"></iframe>
 
   <script>
-    // 配置授权检查API地址（直接使用您的API，不再通过代理）
+    // 配置授权检查API地址（仅基础地址）
     const AUTH_API_URL = 'https://fftz.huishi.name/check.php';
     
     // 调试模式
@@ -166,39 +166,46 @@
       return urlParams.get(name);
     }
 
-    // 授权检查函数（简化版，直接调用您的API）
+    // 修正后的授权检查函数
     async function checkAuth(url) {
       if (DEBUG_MODE) {
-        console.warn('调试模式：跳过授权检查');
+        console.warn('[调试] 跳过授权检查');
         return { authorized: true, expireTime: '2099-12-31' };
       }
 
       try {
-        console.log('正在请求授权验证:', url);
+        // 动态构造完整请求URL
         const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(url)}`;
-        const response = await fetch(apiUrl);
+        console.log('[请求] 正在验证授权:', apiUrl);
+        
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        console.log('[响应] 状态码:', response.status);
         
         if (!response.ok) {
-          console.error('网络响应不正常:', response.status);
-          throw new Error('网络响应不正常');
+          throw new Error(`HTTP错误! 状态码: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log('授权验证结果:', data);
+        console.log('[响应] 数据:', JSON.stringify(data));
         
+        // 严格验证响应结构
         return {
           authorized: data.code === 200,
           expireTime: data.data?.expire_time || null
         };
       } catch (error) {
-        console.error('授权检查失败:', error);
+        console.error('[错误] 授权检查失败:', error);
         return { authorized: false, expireTime: null };
       }
     }
 
     // 显示水印
     function showWatermark(errorMessage = '', expireTime = null) {
-      console.log('显示水印，原因:', errorMessage);
+      console.warn('[状态] 显示水印，原因:', errorMessage);
       const watermark = document.getElementById('watermark');
       const errorDetail = document.getElementById('errorDetail');
       const expireInfo = document.getElementById('expireInfo');
@@ -217,60 +224,50 @@
       // 显示控制台警告
       if (!navigator.userAgent.includes('Mobile')) {
         document.getElementById('consoleWarning').style.display = 'block';
-        console.warn('%c 警告！非法访问已被记录！', 
-          'color: red; font-size: 16px; font-weight: bold');
       }
     }
 
     // 隐藏水印
     function hideWatermark() {
-      console.log('隐藏水印，授权有效');
+      console.log('[状态] 授权有效，隐藏水印');
       document.getElementById('watermark').style.display = 'none';
       document.getElementById('consoleWarning').style.display = 'none';
     }
 
     // 加载内容
     function loadContent(url) {
-      console.log('正在加载内容:', url);
+      console.log('[加载] 正在加载内容:', url);
       const frame = document.getElementById('contentFrame');
       frame.src = url;
       document.getElementById('loading').style.display = 'none';
       
       frame.onload = function() {
-        console.log('内容加载完成');
+        console.log('[加载] 内容加载完成');
         try {
-          bindMouseWheel(frame);
+          // 鼠标滚轮控制（跨域可能受限）
+          const firefox = navigator.userAgent.includes('Firefox');
+          const doc = frame.contentWindow.document;
+          
+          if (firefox) {
+            doc.addEventListener('DOMMouseScroll', (e) => {
+              e.preventDefault();
+              doc.body.scrollTop += e.detail > 0 ? 50 : -50;
+            }, false);
+          } else {
+            doc.onmousewheel = function(e) {
+              e.preventDefault();
+              doc.body.scrollTop += e.wheelDelta > 0 ? -50 : 50;
+            };
+          }
         } catch(e) {
-          console.log('跨域限制:', e);
+          console.log('[提示] 跨域限制:', e.message);
         }
       };
     }
 
-    // 鼠标滚轮控制
-    function bindMouseWheel(ifr) {
-      const firefox = navigator.userAgent.indexOf('Firefox') != -1;
-      
-      function handleWheel(e, doc) {
-        e.preventDefault();
-        const up = (firefox && e.detail < 0) || e.wheelDelta > 0;
-        doc.body.scrollTop = doc.documentElement.scrollTop += up ? -50 : 50;
-      }
-      
-      try {
-        const doc = ifr.contentWindow.document;
-        if (firefox) {
-          doc.addEventListener('DOMMouseScroll', (e) => handleWheel(e, doc), false);
-        } else {
-          doc.onmousewheel = (e) => handleWheel(e || ifr.contentWindow.event, doc);
-        }
-      } catch(e) {
-        console.log('跨域无法获取iframe加载document', e);
-      }
-    }
-
     // 主执行函数
     async function main() {
-      console.log('页面初始化开始');
+      console.group('初始化开始');
       try {
         const encodedParam = getUrlParam('c');
         if (!encodedParam) {
@@ -282,65 +279,75 @@
         try {
           trueUrl = atob(encodedParam.replace(/_/g, '/').replace(/-/g, '+'));
           if (!trueUrl.startsWith('http')) {
-            // 尝试第二种解码方式
             trueUrl = decodeURIComponent(escape(atob(encodedParam)));
           }
           
-          // 验证URL格式
           if (!/^https?:\/\/.+\..+/.test(trueUrl)) {
-            throw new Error('无效的URL格式');
+            throw new Error('URL格式无效');
           }
         } catch (e) {
           throw new Error('URL解码失败: ' + e.message);
         }
 
-        console.log('解码后的真实URL:', trueUrl);
+        console.log('[解码] 真实URL:', trueUrl);
         
-        // 立即加载内容
+        // 立即加载内容（不等待授权验证）
         loadContent(trueUrl);
 
         // 授权检查
+        console.log('[验证] 开始授权检查...');
         const { authorized, expireTime } = await checkAuth(trueUrl);
-        console.log('授权检查结果:', { authorized, expireTime });
+        console.log('[验证] 结果:', { authorized, expireTime });
         
         if (!authorized) {
           showWatermark('授权验证失败', expireTime);
+          
+          // 记录未授权访问
+          try {
+            await fetch(`${AUTH_API_URL}?log=unauthorized&url=${encodeURIComponent(trueUrl)}&ref=${encodeURIComponent(document.referrer || 'direct')}`);
+          } catch (e) {
+            console.error('[记录] 未授权访问记录失败:', e);
+          }
         } else {
           hideWatermark();
         }
       } catch (error) {
-        console.error('初始化失败:', error);
+        console.error('[错误] 初始化失败:', error);
         showWatermark(error.message || '网络请求失败，请稍后重试');
+      } finally {
+        console.groupEnd();
       }
     }
 
     // 页面加载完成后启动
     window.addEventListener('DOMContentLoaded', main);
 
-    // 添加心跳检测
+    // 心跳检测（每小时检查一次授权状态）
     setInterval(async () => {
       if (!DEBUG_MODE && document.getElementById('watermark').style.display === 'none') {
         const frame = document.getElementById('contentFrame');
-        if (frame && frame.src) {
-          console.log('执行定期授权检查...');
+        if (frame?.src) {
+          console.log('[心跳] 定期授权检查...');
           const { authorized, expireTime } = await checkAuth(frame.src);
-          if (!authorized) showWatermark('授权已过期', expireTime);
+          if (!authorized) {
+            showWatermark('授权已过期', expireTime);
+          }
         }
       }
-    }, 3600000); // 每小时检查一次
+    }, 3600000);
 
-    // 防止右键菜单
-    document.addEventListener('contextmenu', function(e) {
+    // 防止右键菜单（仅在水印显示时）
+    document.addEventListener('contextmenu', (e) => {
       if (document.getElementById('watermark').style.display === 'flex') {
         e.preventDefault();
       }
     });
 
-    // 控制台检测
+    // 控制台检测（非调试模式时）
     if (!DEBUG_MODE) {
-      setInterval(function() {
-        if (window.console && window.console.firebug) {
-          showWatermark('检测到非法调试工具使用');
+      setInterval(() => {
+        if (window.console?.firebug) {
+          showWatermark('检测到非法调试工具');
         }
       }, 1000);
     }
