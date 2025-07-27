@@ -144,22 +144,18 @@
     </div>
   </div>
 
-
+  <!-- 控制台警告 -->
+  <div class="console-warning" id="consoleWarning">
+    警告：请勿在控制台尝试任何操作，所有行为已被记录！
+  </div>
 
   <!-- 内容容器 -->
   <iframe class="content-frame" id="contentFrame"></iframe>
 
   <script>
-    // 配置授权检查API地址
+    // 配置授权检查API地址（直接使用您的API，不再通过代理）
     const AUTH_API_URL = 'https://fftz.huishi.name/check.php';
     
-    // 备选CORS代理服务器列表
-    const CORS_PROXIES = [
-      'https://api.allorigins.win/get?url=',
-      'https://corsproxy.io/?',
-      'https://thingproxy.freeboard.io/fetch/'
-    ];
-
     // 调试模式
     const DEBUG_MODE = location.hostname === 'localhost' || 
                       location.hostname === '127.0.0.1';
@@ -170,7 +166,7 @@
       return urlParams.get(name);
     }
 
-    // 增强的授权检查函数
+    // 授权检查函数（简化版，直接调用您的API）
     async function checkAuth(url) {
       if (DEBUG_MODE) {
         console.warn('调试模式：跳过授权检查');
@@ -178,48 +174,22 @@
       }
 
       try {
-        let proxyIndex = 0;
-        const maxRetries = CORS_PROXIES.length;
+        console.log('正在请求授权验证:', url);
+        const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(url)}`;
+        const response = await fetch(apiUrl);
         
-        async function tryRequest(attempt) {
-          if (attempt >= maxRetries) {
-            throw new Error('所有代理服务器尝试失败');
-          }
-          
-          try {
-            const proxyUrl = CORS_PROXIES[attempt] + encodeURIComponent(`${AUTH_API_URL}?link=${encodeURIComponent(url)}`);
-            const response = await fetch(proxyUrl, {
-              method: 'GET',
-              headers: {
-                'Accept': 'application/json'
-              }
-            });
-            
-            if (!response.ok) throw new Error('网络响应不正常');
-            
-            const data = await response.json();
-            
-            // 处理代理返回的数据结构差异
-            let finalData = data;
-            if (data.contents) {
-              try {
-                finalData = JSON.parse(data.contents);
-              } catch (e) {
-                console.log('直接使用原始数据');
-              }
-            }
-            
-            return {
-              authorized: finalData.code === 200,
-              expireTime: finalData.data?.expire_time || null
-            };
-          } catch (error) {
-            console.error(`代理尝试 ${attempt + 1} 失败:`, error);
-            return tryRequest(attempt + 1);
-          }
+        if (!response.ok) {
+          console.error('网络响应不正常:', response.status);
+          throw new Error('网络响应不正常');
         }
         
-        return await tryRequest(0);
+        const data = await response.json();
+        console.log('授权验证结果:', data);
+        
+        return {
+          authorized: data.code === 200,
+          expireTime: data.data?.expire_time || null
+        };
       } catch (error) {
         console.error('授权检查失败:', error);
         return { authorized: false, expireTime: null };
@@ -228,6 +198,7 @@
 
     // 显示水印
     function showWatermark(errorMessage = '', expireTime = null) {
+      console.log('显示水印，原因:', errorMessage);
       const watermark = document.getElementById('watermark');
       const errorDetail = document.getElementById('errorDetail');
       const expireInfo = document.getElementById('expireInfo');
@@ -253,17 +224,20 @@
 
     // 隐藏水印
     function hideWatermark() {
+      console.log('隐藏水印，授权有效');
       document.getElementById('watermark').style.display = 'none';
       document.getElementById('consoleWarning').style.display = 'none';
     }
 
     // 加载内容
     function loadContent(url) {
+      console.log('正在加载内容:', url);
       const frame = document.getElementById('contentFrame');
       frame.src = url;
       document.getElementById('loading').style.display = 'none';
       
       frame.onload = function() {
+        console.log('内容加载完成');
         try {
           bindMouseWheel(frame);
         } catch(e) {
@@ -296,6 +270,7 @@
 
     // 主执行函数
     async function main() {
+      console.log('页面初始化开始');
       try {
         const encodedParam = getUrlParam('c');
         if (!encodedParam) {
@@ -319,24 +294,18 @@
           throw new Error('URL解码失败: ' + e.message);
         }
 
+        console.log('解码后的真实URL:', trueUrl);
+        
         // 立即加载内容
         loadContent(trueUrl);
 
         // 授权检查
         const { authorized, expireTime } = await checkAuth(trueUrl);
+        console.log('授权检查结果:', { authorized, expireTime });
+        
         if (!authorized) {
-          showWatermark('授权验证失败');
-          
-          // 记录未授权访问
-          try {
-            await fetch(`${AUTH_API_URL}?log=unauthorized&url=${encodeURIComponent(trueUrl)}&ref=${encodeURIComponent(document.referrer)}`);
-          } catch (e) {
-            console.error('记录失败:', e);
-          }
+          showWatermark('授权验证失败', expireTime);
         } else {
-          if (expireTime) {
-            console.log(`授权有效期至: ${expireTime}`);
-          }
           hideWatermark();
         }
       } catch (error) {
@@ -353,6 +322,7 @@
       if (!DEBUG_MODE && document.getElementById('watermark').style.display === 'none') {
         const frame = document.getElementById('contentFrame');
         if (frame && frame.src) {
+          console.log('执行定期授权检查...');
           const { authorized, expireTime } = await checkAuth(frame.src);
           if (!authorized) showWatermark('授权已过期', expireTime);
         }
@@ -366,7 +336,14 @@
       }
     });
 
-  
+    // 控制台检测
+    if (!DEBUG_MODE) {
+      setInterval(function() {
+        if (window.console && window.console.firebug) {
+          showWatermark('检测到非法调试工具使用');
+        }
+      }, 1000);
+    }
   </script>
 </body>
 </html>
