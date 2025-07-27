@@ -160,12 +160,6 @@
     const DEBUG_MODE = location.hostname === 'localhost' || 
                       location.hostname === '127.0.0.1';
 
-    // 获取URL参数
-    function getUrlParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-    }
-
     // 修正后的授权检查函数
     async function checkAuth() {
       if (DEBUG_MODE) {
@@ -174,8 +168,9 @@
       }
 
       try {
-        // 使用当前页面的完整URL作为验证链接
-        const currentPageUrl = window.location.href;
+        // 获取当前页面URL，不进行额外编码
+        const currentPageUrl = window.location.origin + window.location.pathname + window.location.search;
+        // 只对整体URL进行一次编码
         const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(currentPageUrl)}`;
         console.log('[请求] 正在验证授权:', apiUrl);
         
