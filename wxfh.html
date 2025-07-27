@@ -1,1 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>页面加载</title>
+  <style>
+    /* 加载动画样式 */
+    .loading-container {
+      width: 100px;
+      height: 100px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1000;
+    }
+    .loading-dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+    }
+    .dot-1 { background-color: #ffe386; animation: dot-move 2s ease infinite 0s; }
+    .dot-2 { background-color: #10beae; animation: dot-move 2s ease infinite 0.2s; }
+    .dot-3 { background-color: #f74d75; animation: dot-move 2s ease infinite 0.4s; }
+    
+    @keyframes dot-move {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(0.5); opacity: 0.5; }
+    }
+    
+    /* 内容样式 */
+    .content-frame {
+      height: 100%;
+      width: 100%;
+      position: fixed;
+      left: 0;
+      top: 0;
+      border: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <!-- 加载动画 -->
+  <div class="loading-container" id="loading">
+    <div class="loading-dot dot-1"></div>
+    <div class="loading-dot dot-2"></div>
+    <div class="loading-dot dot-3"></div>
+  </div>
 
+  <!-- 内容容器 -->
+  <iframe class="content-frame" id="contentFrame"></iframe>
+
+  <script>
+    // 获取URL参数
+    function getUrlParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    // 加载内容
+    function loadContent(url) {
+      const frame = document.getElementById('contentFrame');
+      frame.src = url;
+      document.getElementById('loading').style.display = 'none';
+      
+      frame.onload = function() {
+        try {
+          bindMouseWheel(frame);
+        } catch(e) {
+          console.log('跨域限制:', e);
+        }
+      };
+    }
+
+    // 鼠标滚轮控制
+    function bindMouseWheel(ifr) {
+      const firefox = navigator.userAgent.indexOf('Firefox') != -1;
+      
+      function handleWheel(e, doc) {
+        e.preventDefault();
+        const up = (firefox && e.detail < 0) || e.wheelDelta > 0;
+        doc.body.scrollTop = doc.documentElement.scrollTop += up ? -50 : 50;
+      }
+      
+      try {
+        const doc = ifr.contentWindow.document;
+        if (firefox) {
+          doc.addEventListener('DOMMouseScroll', (e) => handleWheel(e, doc), false);
+        } else {
+          doc.onmousewheel = (e) => handleWheel(e || ifr.contentWindow.event, doc);
+        }
+      } catch(e) {
+        console.log('跨域无法获取iframe加载document', e);
+      }
+    }
+
+    // 主执行函数
+    function main() {
+      try {
+        const encodedParam = getUrlParam('c');
+        if (!encodedParam) {
+          throw new Error('缺少参数(c)');
+        }
+
+        // 解码Base64 URL
+        let trueUrl;
+        try {
+          trueUrl = atob(encodedParam);
+          if (!trueUrl.startsWith('http')) {
+            throw new Error('无效的URL格式');
+          }
+        } catch (e) {
+          throw new Error('URL解码失败');
+        }
+
+        // 加载内容
+        loadContent(trueUrl);
+      } catch (error) {
+        console.error('初始化失败:', error);
+        alert(error.message || '加载失败，请检查URL参数');
+      }
+    }
+
+    // 页面加载完成后启动
+    window.addEventListener('DOMContentLoaded', main);
+  </script>
+</body>
+</html>
