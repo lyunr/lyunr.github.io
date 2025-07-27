@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>页面加载</title>
+  <title>内容加载</title>
   <style>
     /* 加载动画样式 */
     .loading-container {
@@ -59,13 +59,6 @@
   <iframe class="content-frame" id="contentFrame"></iframe>
 
   <script>
-    // 备选CORS代理服务器列表（保留但未使用）
-    const CORS_PROXIES = [
-      'https://api.allorigins.win/get?url=',
-      'https://corsproxy.io/?',
-      'https://thingproxy.freeboard.io/fetch/'
-    ];
-
     // 获取URL参数
     function getUrlParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -87,7 +80,7 @@
       };
     }
 
-    // 鼠标滚轮控制（保留功能）
+    // 鼠标滚轮控制
     function bindMouseWheel(ifr) {
       const firefox = navigator.userAgent.indexOf('Firefox') != -1;
       
@@ -109,12 +102,12 @@
       }
     }
 
-    // 主执行函数（移除了授权检查）
+    // 主执行函数
     function main() {
       try {
         const encodedParam = getUrlParam('c');
         if (!encodedParam) {
-          throw new Error('缺少参数(c)');
+          throw new Error('缺少URL参数(c)');
         }
 
         // 解码Base64 URL
@@ -128,11 +121,12 @@
           throw new Error('URL解码失败');
         }
 
-        // 直接加载内容（不再检查授权）
+        // 加载内容
         loadContent(trueUrl);
       } catch (error) {
         console.error('初始化失败:', error);
-        alert(error.message || '加载失败，请检查URL参数');
+        document.getElementById('loading').style.display = 'none';
+        document.body.innerHTML = `<div style="text-align:center;padding-top:50px;color:red;">${error.message || '加载失败'}</div>`;
       }
     }
 
