@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>授权验证</title>
-  <link rel="icon" href="data:,"> <!-- 防止favicon.ico请求 -->
+  <link rel="icon" href="data:,">
   <style>
     /* 加载动画样式 */
     .loading-container {
@@ -167,6 +167,15 @@
       return urlParams.get(name);
     }
 
+    // 强制HTTPS转换函数
+    function ensureHttps(url) {
+      if (url.startsWith('http://')) {
+        console.warn('将HTTP转换为HTTPS:', url);
+        return url.replace('http://', 'https://');
+      }
+      return url;
+    }
+
     // 授权检查函数
     async function checkAuth() {
       if (DEBUG_MODE) {
@@ -177,13 +186,13 @@
       try {
         // 获取当前页面完整URL（包含参数）
         const currentPageUrl = window.location.origin + window.location.pathname + window.location.search;
-        const apiUrl = AUTH_API_URL + '?link=' + encodeURIComponent(currentPageUrl);
+        const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(currentPageUrl)}`;
         console.log('[请求] 正在验证授权:', apiUrl);
         
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
-          mode: 'cors' // 明确指定CORS模式
+          credentials: 'omit'
         });
         
         if (!response.ok) {
@@ -233,15 +242,14 @@
     // 加载内容
     function loadContent(url) {
       const frame = document.getElementById('contentFrame');
-      // 确保加载的URL是HTTPS
-      const secureUrl = url.replace(/^http:/, 'https:');
+      const secureUrl = ensureHttps(url);
+      
+      frame.onerror = function() {
+        showWatermark('内容加载失败，请确保URL使用HTTPS协议');
+      };
+      
       frame.src = secureUrl;
       document.getElementById('loading').style.display = 'none';
-      
-      // 处理iframe加载错误
-      frame.onerror = function() {
-        showWatermark('内容加载失败，请检查URL是否正确');
-      };
     }
 
     // 主执行函数
@@ -263,6 +271,8 @@
           if (!/^https?:\/\/.+\..+/.test(trueUrl)) {
             throw new Error('URL格式无效');
           }
+          
+          trueUrl = ensureHttps(trueUrl);
         } catch (e) {
           throw new Error('URL解码失败: ' + e.message);
         }
@@ -283,9 +293,6 @@
         showWatermark(error.message || '网络请求失败，请稍后重试');
       }
     }
-
-    // 页面加载完成后启动
-    window.addEventListener('DOMContentLoaded', main);
 
     // 心跳检测（每小时检查一次授权状态）
     setInterval(async () => {
@@ -312,6 +319,9 @@
         }
       }, 1000);
     }
+
+    // 页面加载完成后启动
+    window.addEventListener('DOMContentLoaded', main);
   </script>
 </body>
 </html>
