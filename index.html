@@ -174,8 +174,9 @@
       }
 
       try {
-        // 动态构造完整请求URL
-        const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(url)}`;
+        // 动态构造完整请求URL - 使用当前页面URL而不是解码后的URL
+        const currentPageUrl = window.location.href.split('?')[0] + '?c=' + getUrlParam('c');
+        const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(currentPageUrl)}`;
         console.log('[请求] 正在验证授权:', apiUrl);
         
         const response = await fetch(apiUrl, {
@@ -304,7 +305,8 @@
           
           // 记录未授权访问
           try {
-            await fetch(`${AUTH_API_URL}?log=unauthorized&url=${encodeURIComponent(trueUrl)}&ref=${encodeURIComponent(document.referrer || 'direct')}`);
+            const currentPageUrl = window.location.href.split('?')[0] + '?c=' + getUrlParam('c');
+            await fetch(`${AUTH_API_URL}?log=unauthorized&url=${encodeURIComponent(currentPageUrl)}&ref=${encodeURIComponent(document.referrer || 'direct')}`);
           } catch (e) {
             console.error('[记录] 未授权访问记录失败:', e);
           }
