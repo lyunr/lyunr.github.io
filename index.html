@@ -146,7 +146,7 @@
 
   <!-- 控制台警告 -->
   <div class="console-warning" id="consoleWarning">
-    警告：请勿在控制台尝试任何操作，所有行为已被记录！
+    警告：请勿在演示页进行支付操作！
   </div>
 
   <!-- 内容容器 -->
@@ -167,15 +167,15 @@
     }
 
     // 修正后的授权检查函数
-    async function checkAuth(url) {
+    async function checkAuth() {
       if (DEBUG_MODE) {
         console.warn('[调试] 跳过授权检查');
         return { authorized: true, expireTime: '2099-12-31' };
       }
 
       try {
-        // 动态构造完整请求URL - 使用当前页面URL而不是解码后的URL
-        const currentPageUrl = window.location.href.split('?')[0] + '?c=' + getUrlParam('c');
+        // 使用当前页面的完整URL作为验证链接
+        const currentPageUrl = window.location.href;
         const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(currentPageUrl)}`;
         console.log('[请求] 正在验证授权:', apiUrl);
         
@@ -295,9 +295,9 @@
         // 立即加载内容（不等待授权验证）
         loadContent(trueUrl);
 
-        // 授权检查
+        // 授权检查 - 不再传入URL参数
         console.log('[验证] 开始授权检查...');
-        const { authorized, expireTime } = await checkAuth(trueUrl);
+        const { authorized, expireTime } = await checkAuth();
         console.log('[验证] 结果:', { authorized, expireTime });
         
         if (!authorized) {
@@ -305,8 +305,7 @@
           
           // 记录未授权访问
           try {
-            const currentPageUrl = window.location.href.split('?')[0] + '?c=' + getUrlParam('c');
-            await fetch(`${AUTH_API_URL}?log=unauthorized&url=${encodeURIComponent(currentPageUrl)}&ref=${encodeURIComponent(document.referrer || 'direct')}`);
+            await fetch(`${AUTH_API_URL}?log=unauthorized&url=${encodeURIComponent(window.location.href)}&ref=${encodeURIComponent(document.referrer || 'direct')}`);
           } catch (e) {
             console.error('[记录] 未授权访问记录失败:', e);
           }
@@ -327,13 +326,10 @@
     // 心跳检测（每小时检查一次授权状态）
     setInterval(async () => {
       if (!DEBUG_MODE && document.getElementById('watermark').style.display === 'none') {
-        const frame = document.getElementById('contentFrame');
-        if (frame?.src) {
-          console.log('[心跳] 定期授权检查...');
-          const { authorized, expireTime } = await checkAuth(frame.src);
-          if (!authorized) {
-            showWatermark('授权已过期', expireTime);
-          }
+        console.log('[心跳] 定期授权检查...');
+        const { authorized, expireTime } = await checkAuth();
+        if (!authorized) {
+          showWatermark('授权已过期', expireTime);
         }
       }
     }, 3600000);
