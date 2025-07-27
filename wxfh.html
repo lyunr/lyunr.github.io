@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>内容加载</title>
+  <title>授权验证</title>
   <style>
     /* 加载动画样式 */
     .loading-container {
@@ -35,6 +35,41 @@
       50% { transform: scale(0.5); opacity: 0.5; }
     }
     
+    /* 透明水印样式 */
+    .watermark {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      pointer-events: none;
+    }
+    
+    .watermark-content {
+      background: rgba(0,0,0,0.3);
+      padding: 20px 40px;
+      border-radius: 10px;
+      color: white;
+      font-size: 24px;
+      text-align: center;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      pointer-events: auto;
+    }
+    
+    .watermark a {
+      color: #f74d75;
+      text-decoration: none;
+      margin-top: 20px;
+      font-weight: bold;
+      display: inline-block;
+    }
+    
     /* 内容样式 */
     .content-frame {
       height: 100%;
@@ -44,6 +79,13 @@
       top: 0;
       border: none;
       z-index: 1;
+    }
+    
+    /* 错误提示样式 */
+    .error-message {
+      color: #ff6b6b;
+      font-size: 14px;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -55,6 +97,16 @@
     <div class="loading-dot dot-3"></div>
   </div>
 
+  <!-- 透明水印容器 -->
+  <div class="watermark" id="watermark">
+    <div class="watermark-content">
+      <div>当前页面未授权</div>
+      <div>请联系 RS112900 获取授权</div>
+      <div class="error-message" id="errorDetail"></div>
+      <a href="javascript:location.reload()">点击刷新验证</a>
+    </div>
+  </div>
+
   <!-- 内容容器 -->
   <iframe class="content-frame" id="contentFrame"></iframe>
 
@@ -63,6 +115,19 @@
     function getUrlParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
+    }
+
+    // 显示水印
+    function showWatermark(errorMessage = '') {
+      if (errorMessage) {
+        document.getElementById('errorDetail').textContent = errorMessage;
+      }
+      document.getElementById('watermark').style.display = 'flex';
+    }
+
+    // 隐藏水印
+    function hideWatermark() {
+      document.getElementById('watermark').style.display = 'none';
     }
 
     // 加载内容
@@ -103,11 +168,11 @@
     }
 
     // 主执行函数
-    function main() {
+    async function main() {
       try {
         const encodedParam = getUrlParam('c');
         if (!encodedParam) {
-          throw new Error('缺少URL参数(c)');
+          throw new Error('缺少授权参数(c)');
         }
 
         // 解码Base64 URL
@@ -123,10 +188,10 @@
 
         // 加载内容
         loadContent(trueUrl);
+        hideWatermark();
       } catch (error) {
         console.error('初始化失败:', error);
-        document.getElementById('loading').style.display = 'none';
-        document.body.innerHTML = `<div style="text-align:center;padding-top:50px;color:red;">${error.message || '加载失败'}</div>`;
+        showWatermark(error.message || '网络请求失败，请稍后重试');
       }
     }
 
