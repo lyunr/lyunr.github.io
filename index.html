@@ -184,11 +184,11 @@
       }
 
       try {
-        // 获取当前页面完整URL（包含参数）
-        const currentPageUrl = window.location.origin + window.location.pathname + window.location.search;
-        const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(currentPageUrl)}`;
+        // 获取当前页面完整URL（包含参数），不进行编码
+        const currentPageUrl = window.location.href.split('#')[0]; // 去除hash部分
+        const apiUrl = `${AUTH_API_URL}?link=${currentPageUrl}`; // 直接拼接，不编码
         console.log('[请求] 正在验证授权:', apiUrl);
-        
+    
         const response = await fetch(apiUrl, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
