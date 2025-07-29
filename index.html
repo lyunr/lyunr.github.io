@@ -160,6 +160,98 @@
   <script>
     const AUTH_API_URL = 'https://fftz.huishi.name/check.php';
     const DEBUG_MODE = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    
+    // CORS代理服务器列表
+    const CORS_PROXIES = [
+      'https://api.allorigins.win/get?url=',
+      'https://corsproxy.io/?',
+      'https://thingproxy.freeboard.io/fetch/',
+      'https://cors-anywhere.herokuapp.com/',
+      'https://proxy.cors.sh/'
+    ];
+    
+    // 当前使用的代理索引
+    let currentProxyIndex = 0;
+    
+    // 代理健康状态
+    const proxyHealth = {};
+    
+    // 通过代理发送请求
+    async function fetchWithProxy(url, options = {}, retryCount = 0) {
+      if (DEBUG_MODE) {
+        return fetch(url, options);
+      }
+      
+      const proxyUrl = CORS_PROXIES[currentProxyIndex] + encodeURIComponent(url);
+      
+      try {
+        const response = await fetch(proxyUrl, options);
+        
+        // 检查代理响应是否有效
+        if (response.ok) {
+          // 有些代理返回的是包装对象，需要提取原始数据
+          if (proxyUrl.includes('allorigins.win')) {
+            const data = await response.json();
+            if (data.contents) {
+              return new Response(data.contents, {
+                status: 200,
+                headers: response.headers
+              });
+            }
+          }
+          return response;
+        }
+        
+        throw new Error(`Proxy ${currentProxyIndex} failed with status ${response.status}`);
+      } catch (error) {
+        console.error(`[代理错误] 使用代理 ${currentProxyIndex} 失败:`, error);
+        
+        // 标记当前代理为不健康
+        proxyHealth[currentProxyIndex] = false;
+        
+        // 尝试下一个代理
+        if (retryCount < CORS_PROXIES.length - 1) {
+          currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
+          console.log(`[代理切换] 尝试下一个代理: ${currentProxyIndex}`);
+          return fetchWithProxy(url, options, retryCount + 1);
+        }
+        
+        throw new Error('所有CORS代理尝试失败');
+      }
+    }
+    
+    // 检查代理健康状况
+    async function checkProxyHealth() {
+      const testUrl = 'https://www.google.com';
+      
+      for (let i = 0; i < CORS_PROXIES.length; i++) {
+        try {
+          const startTime = Date.now();
+          const response = await fetch(CORS_PROXIES[i] + encodeURIComponent(testUrl), {
+            timeout: 5000
+          });
+          
+          if (response.ok) {
+            proxyHealth[i] = true;
+            console.log(`[代理检测] 代理 ${i} 健康，响应时间: ${Date.now() - startTime}ms`);
+          } else {
+            proxyHealth[i] = false;
+          }
+        } catch (e) {
+          proxyHealth[i] = false;
+        }
+      }
+      
+      // 选择最健康的代理
+      const healthyProxies = Object.entries(proxyHealth)
+        .filter(([_, healthy]) => healthy)
+        .map(([index]) => parseInt(index));
+        
+      if (healthyProxies.length > 0) {
+        currentProxyIndex = healthyProxies[0];
+        console.log(`[代理选择] 选择健康代理 ${currentProxyIndex}`);
+      }
+    }
 
     function getUrlParam(name) {
       return new URLSearchParams(window.location.search).get(name);
@@ -203,10 +295,10 @@
 
       try {
         const currentPageUrl = getCurrentPageUrl();
-        const apiUrl = `${AUTH_API_URL}?link=${currentPageUrl}`;
+        const apiUrl = `${AUTH_API_URL}?link=${encodeURIComponent(currentPageUrl)}`;
         console.log('[请求] 授权验证:', apiUrl);
         
-        const response = await fetch(apiUrl, {
+        const response = await fetchWithProxy(apiUrl, {
           method: 'GET',
           headers: { 'Accept': 'application/json' }
         });
@@ -253,6 +345,9 @@
 
     async function main() {
       try {
+        // 初始化代理健康检查
+        await checkProxyHealth();
+        
         const encodedParam = getUrlParam('c');
         if (!encodedParam) throw new Error('缺少授权参数(c)');
 
@@ -272,10 +367,15 @@
       }
     }
 
+    // 每小时检查一次授权状态和代理健康
     setInterval(async () => {
-      if (!DEBUG_MODE && document.getElementById('watermark').style.display === 'none') {
-        const { authorized, expireTime } = await checkAuth();
-        if (!authorized) showWatermark('授权已过期', expireTime);
+      if (!DEBUG_MODE) {
+        await checkProxyHealth();
+        
+        if (document.getElementById('watermark').style.display === 'none') {
+          const { authorized, expireTime } = await checkAuth();
+          if (!authorized) showWatermark('授权已过期', expireTime);
+        }
       }
     }, 3600000);
 
