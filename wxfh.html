@@ -35,41 +35,6 @@
       50% { transform: scale(0.5); opacity: 0.5; }
     }
     
-    /* 透明水印样式 */
-    .watermark {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: transparent;
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      pointer-events: none;
-    }
-    
-    .watermark-content {
-      background: rgba(0,0,0,0.3);
-      padding: 20px 40px;
-      border-radius: 10px;
-      color: white;
-      font-size: 24px;
-      text-align: center;
-      flex-direction: column;
-      box-shadow: 0 0 20px rgba(0,0,0,0.5);
-      pointer-events: auto;
-    }
-    
-    .watermark a {
-      color: #f74d75;
-      text-decoration: none;
-      margin-top: 20px;
-      font-weight: bold;
-      display: inline-block;
-    }
-    
     /* 内容样式 */
     .content-frame {
       height: 100%;
@@ -79,13 +44,6 @@
       top: 0;
       border: none;
       z-index: 1;
-    }
-    
-    /* 错误提示样式 */
-    .error-message {
-      color: #ff6b6b;
-      font-size: 14px;
-      margin-top: 10px;
     }
   </style>
 </head>
@@ -110,38 +68,25 @@
     // 加载内容
     function loadContent(url) {
       const frame = document.getElementById('contentFrame');
-      frame.src = url;
-      document.getElementById('loading').style.display = 'none';
+      
+      // 检查URL协议，如果是http尝试转换为https
+      let secureUrl = url;
+      if (url.startsWith('http://')) {
+        secureUrl = url.replace('http://', 'https://');
+      }
+      
+      frame.src = secureUrl;
       
       frame.onload = function() {
-        try {
-          bindMouseWheel(frame);
-        } catch(e) {
-          console.log('跨域限制:', e);
+        document.getElementById('loading').style.display = 'none';
+      };
+      
+      frame.onerror = function() {
+        // 如果https加载失败，尝试原始url（可能会被浏览器阻止）
+        if (secureUrl !== url) {
+          frame.src = url;
         }
       };
-    }
-
-    // 鼠标滚轮控制
-    function bindMouseWheel(ifr) {
-      const firefox = navigator.userAgent.indexOf('Firefox') != -1;
-      
-      function handleWheel(e, doc) {
-        e.preventDefault();
-        const up = (firefox && e.detail < 0) || e.wheelDelta > 0;
-        doc.body.scrollTop = doc.documentElement.scrollTop += up ? -50 : 50;
-      }
-      
-      try {
-        const doc = ifr.contentWindow.document;
-        if (firefox) {
-          doc.addEventListener('DOMMouseScroll', (e) => handleWheel(e, doc), false);
-        } else {
-          doc.onmousewheel = (e) => handleWheel(e || ifr.contentWindow.event, doc);
-        }
-      } catch(e) {
-        console.log('跨域无法获取iframe加载document', e);
-      }
     }
 
     // 主执行函数
@@ -149,7 +94,8 @@
       try {
         const encodedParam = getUrlParam('c');
         if (!encodedParam) {
-          throw new Error('缺少授权参数(c)');
+          console.error('缺少授权参数(c)');
+          return;
         }
 
         // 解码Base64 URL
@@ -157,18 +103,18 @@
         try {
           trueUrl = atob(encodedParam);
           if (!trueUrl.startsWith('http')) {
-            throw new Error('无效的URL格式');
+            console.error('无效的URL格式');
+            return;
           }
         } catch (e) {
-          throw new Error('URL解码失败');
+          console.error('URL解码失败');
+          return;
         }
 
-        // 直接加载内容
+        // 加载内容
         loadContent(trueUrl);
-        hideWatermark();
       } catch (error) {
         console.error('初始化失败:', error);
-        showWatermark(error.message || '网络请求失败，请稍后重试');
       }
     }
 
