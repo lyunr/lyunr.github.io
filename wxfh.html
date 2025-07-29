@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>页面加载</title>
+  <link rel="icon" href="data:,">
   <style>
-    /* 加载动画样式 */
     .loading-container {
       width: 100px;
       height: 100px;
@@ -35,7 +35,6 @@
       50% { transform: scale(0.5); opacity: 0.5; }
     }
     
-    /* 内容样式 */
     .content-frame {
       height: 100%;
       width: 100%;
@@ -45,80 +44,89 @@
       border: none;
       z-index: 1;
     }
+    
+    @media (min-width: 768px) {
+      .console-warning {
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(255,0,0,0.7);
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        z-index: 10000;
+        display: none;
+      }
+    }
   </style>
 </head>
 <body>
-  <!-- 加载动画 -->
   <div class="loading-container" id="loading">
     <div class="loading-dot dot-1"></div>
     <div class="loading-dot dot-2"></div>
     <div class="loading-dot dot-3"></div>
   </div>
 
-  <!-- 内容容器 -->
-  <iframe class="content-frame" id="contentFrame"></iframe>
+  <div class="console-warning" id="consoleWarning">
+    警告：请勿在本演示页进行支付操作！
+  </div>
+
+  <iframe class="content-frame" id="contentFrame" sandbox="allow-same-origin allow-scripts allow-popups allow-forms"></iframe>
 
   <script>
-    // 获取URL参数
     function getUrlParam(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
+      return new URLSearchParams(window.location.search).get(name);
     }
 
-    // 加载内容
-    function loadContent(url) {
-      const frame = document.getElementById('contentFrame');
+    function getCurrentPageUrl() {
+      const url = new URL(window.location.href);
+      let pathname = url.pathname;
       
-      // 检查URL协议，如果是http尝试转换为https
-      let secureUrl = url;
-      if (url.startsWith('http://')) {
-        secureUrl = url.replace('http://', 'https://');
+      if (url.search.includes('c=') && pathname.endsWith('/')) {
+        pathname = pathname.slice(0, -1);
       }
       
-      frame.src = secureUrl;
-      
-      frame.onload = function() {
-        document.getElementById('loading').style.display = 'none';
-      };
-      
-      frame.onerror = function() {
-        // 如果https加载失败，尝试原始url（可能会被浏览器阻止）
-        if (secureUrl !== url) {
-          frame.src = url;
-        }
-      };
+      return url.origin + pathname + url.search;
     }
 
-    // 主执行函数
-    async function main() {
+    function loadContent(encodedParam) {
+      try {
+        let trueUrl = atob(encodedParam.replace(/_/g, '/').replace(/-/g, '+'));
+        if (!trueUrl.startsWith('http')) {
+          trueUrl = decodeURIComponent(escape(atob(encodedParam)));
+        }
+        
+        if (trueUrl.startsWith('http://')) {
+          trueUrl = trueUrl.replace('http://', 'https://');
+          console.warn('[安全] 已将HTTP转换为HTTPS:', trueUrl);
+        }
+        
+        if (!/^https:\/\/.+\..+/.test(trueUrl)) {
+          throw new Error('URL格式无效');
+        }
+        
+        const frame = document.getElementById('contentFrame');
+        frame.onerror = () => console.error('内容加载失败，请检查URL');
+        frame.src = trueUrl;
+        document.getElementById('loading').style.display = 'none';
+      } catch (e) {
+        console.error('内容URL解析失败:', e.message);
+      }
+    }
+
+    function main() {
       try {
         const encodedParam = getUrlParam('c');
-        if (!encodedParam) {
-          console.error('缺少授权参数(c)');
-          return;
-        }
+        if (!encodedParam) throw new Error('缺少参数(c)');
 
-        // 解码Base64 URL
-        let trueUrl;
-        try {
-          trueUrl = atob(encodedParam);
-          if (!trueUrl.startsWith('http')) {
-            console.error('无效的URL格式');
-            return;
-          }
-        } catch (e) {
-          console.error('URL解码失败');
-          return;
-        }
-
-        // 加载内容
-        loadContent(trueUrl);
+        loadContent(encodedParam);
+        
       } catch (error) {
         console.error('初始化失败:', error);
       }
     }
 
-    // 页面加载完成后启动
     window.addEventListener('DOMContentLoaded', main);
   </script>
 </body>
